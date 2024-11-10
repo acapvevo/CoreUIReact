@@ -1,7 +1,7 @@
 import LoadingContent from '@/components/App/Loading/Content'
 import { useAppMutation, useAppQuery } from '@/libs/react-query'
 import { ModalComponentProps } from '@/types/components/modal'
-import { Gender, PasswordInput, PasswordScheme, User, UserInput, UserSchema } from '@/types/user'
+import { Gender, PasswordInput, PasswordScheme, User, UserInput, UserSchema } from '@/types/models/user'
 import { CButton, CCard, CCardBody, CCol, CFormInput, CImage, CRow } from '@coreui/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
@@ -20,7 +20,7 @@ const UpdatePasswordModal = (props: ModalComponentProps) => {
       password: '',
       password_confirmation: '',
     },
-    resolver:zodResolver(PasswordScheme)
+    resolver: zodResolver(PasswordScheme),
   })
   const { handleSubmit } = form
   const { isPending, mutateAsync } = useAppMutation<PasswordInput, Alert>({
@@ -32,7 +32,7 @@ const UpdatePasswordModal = (props: ModalComponentProps) => {
   })
 
   const save: SubmitHandler<PasswordInput> = async (data) => {
-      await mutateAsync(data)
+    await mutateAsync(data)
   }
 
   return (
@@ -217,15 +217,15 @@ const Profile = () => {
             <CCol sm={3}>Gender:</CCol>
             <CCol sm={9}>{GetGender(data?.gender)}</CCol>
             <CCol sm={3}>Email:</CCol>
-            <CCol sm={9}>{data?.email_address}</CCol>
+            <CCol sm={9}>{data?.email}</CCol>
             <CCol sm={3}>Phone Number:</CCol>
-            <CCol sm={9}>{data?.phone_number}</CCol>
+            <CCol sm={9}>{data?.phone_number.number}</CCol>
             <CCol sm={3}>Address:</CCol>
             <CCol sm={9}>
-              {`${data?.address.line_1},`} <br /> {`${data?.address.line_2},`} <br />
-              {`${data?.address.line_3},`} <br />
-              {`${data?.address.postcode} ${data?.address.city},`} <br />
-              {`${data?.address.state}, ${data?.address.country.name}`} <br />
+              {data?.address.line_1}, <br /> {data?.address.line_2}, <br />
+              {data?.address.line_3}, <br />
+              {data?.address.postcode} {data?.address.city}, <br />
+              {data?.address.state}, {data?.address.country} <br />
             </CCol>
           </CRow>
         </CCol>

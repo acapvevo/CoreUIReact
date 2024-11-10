@@ -1,7 +1,7 @@
 import createStore from 'react-auth-kit/createStore'
 import createRefresh from 'react-auth-kit/createRefresh'
 import axios from '@/libs/axios'
-import { User } from '@/types/user'
+import { User } from '@/types/models/user'
 
 const refresh = createRefresh<User>({
   interval: 1,

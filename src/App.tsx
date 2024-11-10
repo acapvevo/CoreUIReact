@@ -19,6 +19,7 @@ import LoadingContent from './components/App/Loading/Content'
 import useTheme from './hooks/theme'
 import { AppRoutes, GuestRoutes, TemplateRoutes } from './routes'
 import queryString from 'query-string'
+import { PermissionProvider } from 'react-permission-role'
 
 const App = () => {
   const { isColorModeSet, setColorMode, colorMode } = useTheme()
@@ -43,12 +44,12 @@ const App = () => {
   const client = new QueryClient()
   const Provider = ({ children }: { children: ReactNode }) => {
     return (
-      <AuthProvider store={store}>
-        <QueryClientProvider client={client}>
-          <ReactQueryDevtools />
-          {children}
-        </QueryClientProvider>
-      </AuthProvider>
+      <QueryClientProvider client={client}>
+        <ReactQueryDevtools />
+        <AuthProvider store={store}>
+          <PermissionProvider>{children}</PermissionProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     )
   }
 

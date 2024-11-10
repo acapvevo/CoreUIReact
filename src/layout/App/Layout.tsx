@@ -2,9 +2,17 @@ import { AppContent, AppSidebar, AppFooter, AppHeader } from '@/components/App'
 import LoadingModal from '@/components/App/Loading/Modal'
 import { State } from '@/types/store'
 import { useSelector } from 'react-redux'
+import useIsAuthenticated from 'react-auth-kit/hooks/useIsAuthenticated'
+import { Navigate, useLocation } from 'react-router-dom'
 
 const Layout = () => {
   const { loading } = useSelector((state: State) => state.loading)
+  const isAuthenticate = useIsAuthenticated()
+  const location = useLocation()
+
+  if (!isAuthenticate) {
+    return <Navigate to={'/Auth/Login'} state={{ redirectTo: location.pathname }}/>
+  }
 
   return (
     <>

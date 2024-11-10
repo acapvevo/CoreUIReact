@@ -19,7 +19,7 @@ import { sidebarAction } from '@/store/slices/sidebar'
 import { State } from '@/types/store'
 import useTheme from '@/hooks/theme'
 import { themeAction } from '@/store/slices/theme'
-import { User } from '@/types/user'
+import { User } from '@/types/models/user'
 
 const AppHeader = () => {
   const user = useAuthUser<User>()

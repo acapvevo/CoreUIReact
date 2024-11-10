@@ -13,8 +13,9 @@ import CIcon from '@coreui/icons-react'
 
 import useAuth from '@/hooks/auth'
 import useAuthUser from 'react-auth-kit/hooks/useAuthUser'
-import { User } from '@/types/user'
+import { User } from '@/types/models/user'
 import { useNavigate } from 'react-router-dom'
+import { AllowedAccess } from 'react-permission-role'
 
 const AppHeaderDropdown = () => {
   const { logout } = useAuth()
@@ -37,14 +38,16 @@ const AppHeaderDropdown = () => {
           </CDropdownItem>
           <CDropdownDivider />
           <CDropdownHeader>Settings</CDropdownHeader>
-          <CDropdownItem as="button" onClick={() => navigate('/Setting/Profile')}>
+          <CDropdownItem href="/Setting/Profile">
             <CIcon icon={cilUser} className="me-2" />
             Profile
           </CDropdownItem>
-          <CDropdownItem href="#">
-            <CIcon icon={cilBriefcase} className="me-2" />
-            System
-          </CDropdownItem>
+          <AllowedAccess permissions={['users', 'roles']} >
+            <CDropdownItem href="/Setting/System">
+              <CIcon icon={cilBriefcase} className="me-2" />
+              System
+            </CDropdownItem>
+          </AllowedAccess>
           <CDropdownDivider />
           <CDropdownItem as="button" onClick={() => logout()}>
             <CIcon icon={cilAccountLogout} className="me-2" />

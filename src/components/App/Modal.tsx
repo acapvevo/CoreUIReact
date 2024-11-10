@@ -6,7 +6,11 @@ const Modal = ({ title, body, footer, ...props }: ModalProps) => {
     <CModal {...props} scrollable backdrop="static" alignment="center" size="xl">
       {title && <CModalHeader>{title}</CModalHeader>}
       <CModalBody>{body}</CModalBody>
-      {footer && <CModalFooter>{footer}</CModalFooter>}
+      {footer && (
+        <CModalFooter className="d-grid gap-2 d-md-flex justify-content-md-end">
+          {footer}
+        </CModalFooter>
+      )}
     </CModal>
   )
 }

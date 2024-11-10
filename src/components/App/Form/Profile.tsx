@@ -1,5 +1,5 @@
 import { useAppQuery } from '@/libs/react-query'
-import { User, UserInput } from '@/types/user'
+import { User, UserInput } from '@/types/models/user'
 import {
   CRow,
   CCol,
@@ -11,7 +11,7 @@ import {
   CDropdownMenu,
   CDropdownToggle,
 } from '@coreui/react'
-import { useEffect, useReducer } from 'react'
+import { useEffect } from 'react'
 import { UseFormReturn } from 'react-hook-form'
 import { usePhoneInput, defaultCountries, parseCountry, FlagImage } from 'react-international-phone'
 import LoadingContent from '../Loading/Content'
@@ -25,6 +25,7 @@ const Profile = ({
     reset,
     formState: { errors },
     watch,
+    getValues,
   },
 }: {
   enabled: boolean
@@ -43,10 +44,11 @@ const Profile = ({
     setCountry,
   } = usePhoneInput({
     countries: defaultCountries,
-    value: watch('phone_number'),
+    defaultCountry: getValues('phone_number.iso2') || undefined,
+    value: getValues('phone_number.number') || undefined,
     onChange: (data) => {
-      setValue('phone_number', data.phone)
-      setValue('address.country.iso2', data.country.iso2)
+      setValue('phone_number.number', data.phone)
+      setValue('phone_number.iso2', data.country.iso2)
     },
   })
 
@@ -88,16 +90,16 @@ const Profile = ({
           floatingLabel="Email"
           type="email"
           id="email"
-          invalid={!!errors['email_address']}
-          feedbackInvalid={errors['email_address']?.message}
-          {...register('email_address')}
+          invalid={!!errors['email']}
+          feedbackInvalid={errors['email']?.message}
+          {...register('email')}
         />
       </CCol>
       <CCol lg={6}>
         <CInputGroup>
           <CDropdown variant="input-group" direction="dropend">
             <CDropdownToggle color="secondary" variant="outline">
-              <FlagImage iso2={watch('address.country.iso2')} />
+              <FlagImage iso2={watch('phone_number.iso2')} />
             </CDropdownToggle>
             <CDropdownMenu className="overflow-auto" style={{ height: '300px' }}>
               {defaultCountries.map((c) => {
@@ -198,7 +200,7 @@ const Profile = ({
           })}
           invalid={!!errors.address?.country}
           feedbackInvalid={errors.address?.country?.message}
-          {...register('address.country.name')}
+          {...register('address.country')}
         />
       </CCol>
     </CRow>

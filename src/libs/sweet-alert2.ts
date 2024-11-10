@@ -1,14 +1,10 @@
 import Swal, { SweetAlertIcon, SweetAlertOptions } from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
-interface AlertProps extends Alert {
-  title?: string
-  html?: string | HTMLElement | JQuery | undefined
-}
+type AlertProps = Alert & SweetAlertOptions
 
 export interface Alert {
   type: SweetAlertIcon
-  text: string
 }
 
 const alertTitle = {
@@ -22,21 +18,14 @@ const alertTitle = {
 const sweetAlert = (props: AlertProps) => {
   const { type, text, title, html } = props
 
-  if (!type && !text) return
-
   const alertSwal = withReactContent(Swal)
   const alert: SweetAlertOptions = {
+    ...props,
     icon: type,
     title: title ?? alertTitle[type],
   }
 
-  if (text) {
-    alert['text'] = text
-  } else if (html) {
-    alert['html'] = html
-  }
-
-  alertSwal.fire(alert)
+  return alertSwal.fire(alert)
 }
 
 export default sweetAlert

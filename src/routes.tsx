@@ -3,7 +3,7 @@ import AppLayout from '@/layout/App/Layout'
 import TemplateLayout from '@/layout/Template/Layout'
 import { RouteObj } from '@/types/route'
 import { lazy } from 'react'
-import { Route } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import AuthOutlet from '@auth-kit/react-router/AuthOutlet'
 import Error from '@/views/Error'
 
@@ -24,6 +24,10 @@ export const app_routes: RouteObj[] = [
         path: '/Profile',
         name: 'Profile',
       },
+      {
+        path: '/System',
+        name: 'System',
+      },
     ],
   },
 ]
@@ -36,6 +40,10 @@ const guest_routes: RouteObj[] = [
       {
         path: '/Login',
         name: 'Login',
+      },
+      {
+        path: '/Register',
+        name: 'Register',
       },
     ],
   },
@@ -167,10 +175,8 @@ const routes_map = (routes: RouteObj[], base: string) => {
 }
 
 const AppRoutes = (
-  <Route element={<AuthOutlet fallbackPath="/Auth/Login" />}>
-    <Route errorElement={<Error />} element={<AppLayout />}>
-      {routes_map(app_routes, '')}
-    </Route>
+  <Route errorElement={<Error />} element={<AppLayout />}>
+    {routes_map(app_routes, '')}
   </Route>
 )
 const GuestRoutes = (

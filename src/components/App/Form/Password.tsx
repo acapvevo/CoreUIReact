@@ -1,4 +1,4 @@
-import { PasswordInput } from '@/types/user'
+import { PasswordInput } from '@/types/models/user'
 import { CCol, CFormInput, CRow } from '@coreui/react'
 import { UseFormReturn } from 'react-hook-form'
 

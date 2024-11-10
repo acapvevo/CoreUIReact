@@ -1,5 +1,6 @@
-import Axios, { AxiosResponse, Method } from 'axios'
-import { Alert } from './sweet-alert2'
+import Axios, { Method } from 'axios'
+import sweetAlert, { Alert } from './sweet-alert2'
+import useAuthHeader from 'react-auth-kit/hooks/useAuthHeader'
 
 const axios = Axios.create({
   baseURL: import.meta.env.VITE_API_URL,

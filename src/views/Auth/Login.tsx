@@ -11,6 +11,7 @@ import {
   CInputGroupText,
   CFormCheck,
   CRow,
+  CCardFooter,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
@@ -20,19 +21,15 @@ import queryString from 'query-string'
 import useAuth from '@/hooks/auth'
 import LoadingButton from '@/components/App/Loading/Button'
 import { getLocalTimezone } from '@/libs/luxon'
-
-interface LoginInput {
-  username: string
-  password: string
-  remember_me: boolean
-  timezone: string
-}
+import { zodResolver } from '@hookform/resolvers/zod'
+import { LoginInput, LoginScheme } from '@/types/models/user'
+import { useLocation } from 'react-router-dom'
 
 const Login = () => {
   const [loading, setLoading] = useState(false)
-  const redirectToAfterAuthenticated = queryString.parse(location.search)['redirectTo'] as string
-
-  const { login } = useAuth(redirectToAfterAuthenticated)
+  const location = useLocation()
+  const redirectToAfterAuthenticated = location.state ? location.state.redirectTo : queryString.parse(location.search)['redirectTo'] as string
+  const { loginWithPost } = useAuth(redirectToAfterAuthenticated)
   const {
     register,
     handleSubmit,
@@ -46,12 +43,13 @@ const Login = () => {
       remember_me: false,
       timezone: getLocalTimezone('z'),
     },
+    resolver: zodResolver(LoginScheme)
   })
 
   const onSubmit: SubmitHandler<LoginInput> = (data) => {
     setLoading(true)
 
-    login(data).finally(() => {
+    loginWithPost(data).finally(() => {
       setLoading(false)
     })
   }
@@ -60,8 +58,8 @@ const Login = () => {
     <CContainer>
       <CRow className="justify-content-center">
         <CCol md={8}>
-          <CCard className="p-4">
-            <CCardBody>
+          <CCard>
+            <CCardBody className='p-4'>
               <CForm onSubmit={handleSubmit(onSubmit)}>
                 <h1>Login</h1>
                 <p className="text-body-secondary">Sign In to your account</p>
@@ -115,6 +113,9 @@ const Login = () => {
                 </CRow>
               </CForm>
             </CCardBody>
+            <CCardFooter className='d-flex justify-content-center'>
+              No Account?&nbsp;<a href='/Auth/Register'>Sign Up Here</a>
+            </CCardFooter>
           </CCard>
         </CCol>
       </CRow>
