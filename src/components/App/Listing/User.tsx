@@ -4,29 +4,40 @@ import sweetAlert from '@/libs/sweet-alert2'
 import { UserListingProps } from '@/types/listings/user'
 import { User } from '@/types/models/user'
 import { ColumnDef } from '@tanstack/react-table'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Action from '../Button/Action'
 import LoadingContent from '../Loading/Content'
 import { Table } from '../Table'
+import { Field, formatQuery, RuleGroupType } from 'react-querybuilder'
+import SearchBuilder from '../SearchBuilder'
+import { generateColumnDefObject } from '@/utils/table'
+import { formatForDateTimeLocalInput } from '@/libs/luxon'
 
 const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProps) => {
+  const [query, setQuery] = useState<RuleGroupType>({ combinator: 'and', rules: [] })
   const { data, refetch, isFetching } = useAppQuery<User[]>({
-    url: '/setting/user',
+    url: `/setting/user?query=${formatQuery(query, 'json_without_ids')}`,
     method: 'GET',
     queryKey: ['user', 'list'],
   })
   const { deleteAsync } = useRequest('/setting/user')
+  const fields = [
+    { name: 'name', label: 'Name' },
+    { name: 'email', label: 'Email Address' },
+    {
+      name: 'created_at',
+      label: 'Created At',
+      inputType: 'datetime-local',
+      defaultValue: formatForDateTimeLocalInput(new Date()),
+    },
+  ]
   const columnDef: ColumnDef<User>[] = [
-    {
-      header: 'Name',
-      accessorKey: 'name',
-    },
-    {
-      header: 'Email',
-      accessorKey: 'email',
-    },
+    ...fields.map(({ name, label }) => {
+      return generateColumnDefObject<User>(label, name)
+    }),
     {
       header: 'Action',
+      enableHiding: false, 
       cell: (cell) => {
         return (
           <Action
@@ -71,11 +82,18 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
 
   useEffect(() => {
     refetch()
-  }, [counter])
+  }, [counter, query])
 
   if (isFetching) return <LoadingContent />
 
-  return <Table data={data!.filter((role) => !role.deleted_at)} columnDef={columnDef} />
+  return (
+    <>
+      <div className="py-3">
+        <SearchBuilder query={query} setQuery={setQuery} fields={fields} />
+      </div>
+      <Table data={data!.filter((role) => !role.deleted_at)} columnDef={columnDef} />
+    </>
+  )
 }
 
 export default UserListing
