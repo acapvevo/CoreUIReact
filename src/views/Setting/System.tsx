@@ -7,9 +7,7 @@ import Modal from '@/components/App/Modal'
 import { useAppMutation } from '@/libs/react-query'
 import { RoleInput, RoleScheme } from '@/types/models/role'
 import {
-  AddressScheme,
   Gender,
-  RegistrationScheme,
   RolesInput,
   RolesScheme,
   UserInput,
@@ -32,7 +30,6 @@ import { useMemo, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { AllowedAccess } from 'react-permission-role'
 import { HasAccessProps } from 'react-permission-role/dist/components/AllowedAccess'
-import { PhoneNumberSchema } from '../../types/models/user'
 
 interface SettingContentProps {
   enabled: boolean

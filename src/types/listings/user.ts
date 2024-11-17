@@ -1,3 +1,3 @@
-import { ListingProps } from "./main";
+import { ListingProps } from './main'
 
 export interface UserListingProps extends ListingProps {}

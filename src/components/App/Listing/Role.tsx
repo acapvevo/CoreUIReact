@@ -1,28 +1,45 @@
 import { useAppQuery } from '@/libs/react-query'
 import { Role } from '@/types/models/role'
-import { ColumnDef } from '@tanstack/react-table'
-import { useEffect } from 'react'
+import { SortingState } from '@tanstack/react-table'
+import { useEffect, useState } from 'react'
 import Action from '../Button/Action'
-import { Table } from '../Table'
 import LoadingContent from '../Loading/Content'
 import sweetAlert from '@/libs/sweet-alert2'
 import useRequest from '@/hooks/request'
 import { RoleListingProps } from '@/types/listings/role'
+import Table from '../Table'
+import { Columns } from '@/types/components/table'
+import { generateColumnDefObject } from '@/utils/table'
+import { formatForDateTimeLocalInput } from '@/libs/luxon'
+import SearchBuilder from '@/components/App/SearchBuilder'
+import { formatQuery, RuleGroupType } from 'react-querybuilder'
 
 const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProps) => {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [query, setQuery] = useState<RuleGroupType>({ combinator: 'and', rules: [] })
   const { data, refetch, isFetching } = useAppQuery<Role[]>({
-    url: '/setting/role',
+    url: `/setting/role?query=${formatQuery(query, 'json_without_ids')}&sort=${encodeURIComponent(JSON.stringify(sorting))}`,
     method: 'GET',
     queryKey: ['role', 'list', 'setting'],
   })
   const { deleteAsync } = useRequest('/setting/role')
-  const columnDef: ColumnDef<Role>[] = [
+  const fields: Columns<Role> = [
     {
-      header: 'Role Name',
-      accessorKey: 'name',
+      label: 'Role',
+      name: 'name',
+      ...generateColumnDefObject<Role>('Role', 'name'),
+    },
+    {
+      name: 'created_at',
+      label: 'Created At',
+      inputType: 'datetime-local',
+      defaultValue: formatForDateTimeLocalInput(new Date()),
+      ...generateColumnDefObject<Role>('Created At', 'created_at'),
     },
     {
       header: 'Action',
+      enableHiding: false,
+      enableSorting: false,
       cell: (cell) => {
         return (
           <Action
@@ -67,11 +84,29 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
 
   useEffect(() => {
     refetch()
-  }, [counter])
+  }, [counter, query,sorting])
 
-  if (isFetching) return <LoadingContent />
-
-  return <Table data={data!.filter((role) => !role.deleted_at)} columnDef={columnDef} />
+  return (
+    <>
+      <div className="py-3">
+        <SearchBuilder
+          query={query}
+          setQuery={setQuery}
+          fields={fields.filter((field) => field.header !== 'Action')}
+        />
+      </div>
+      {isFetching ? (
+        <LoadingContent />
+      ) : (
+        <Table
+          data={data!.filter((role) => !role.deleted_at)}
+          columnDef={fields}
+          sorting={sorting}
+          setSorting={setSorting}
+        />
+      )}
+    </>
+  )
 }
 
 export default RoleListing

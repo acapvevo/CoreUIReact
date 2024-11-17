@@ -11,23 +11,22 @@ import {
   CButton,
   CDropdownItem,
   CFormSwitch,
+  CFormSelect,
+  CRow,
+  CFormLabel,
+  CCol,
 } from '@coreui/react'
-import { CTableProps } from '@coreui/react/dist/esm/components/table/CTable'
 import {
-  ColumnDef,
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   flexRender,
-  Table as TableReturn,
-  Header,
-  Cell,
   PaginationState,
 } from '@tanstack/react-table'
 import { range } from 'lodash'
-import { CSSProperties, Dispatch, ReactNode, SetStateAction, useState } from 'react'
+import { CSSProperties, ReactNode, useState } from 'react'
 
 // needed for table body level scope DnD setup
 import {
@@ -46,26 +45,25 @@ import { arrayMove, SortableContext, horizontalListSortingStrategy } from '@dnd-
 // needed for row & cell level scope DnD setup
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Icon } from '@iconify/react'
-import { ContextMenuProps } from '@/types/components/context_menu'
 import ContextMenu from './ContextMenu'
+import {
+  DragAlongCellType,
+  DraggableHeaderType,
+  TableContentType,
+  TableContextMenuType,
+  TableProps,
+} from '@/types/components/table'
+import Icon from './Icon'
 
-interface TableProps<T> extends CTableProps {
-  data: Array<T>
-  columnDef: ColumnDef<T>[]
-  pageSize?: number
-  usePagination?: boolean
-  enableRowSelection?: boolean
-}
-
-export const Table: <T>(props: TableProps<T>) => ReactNode = ({
+const Table: <T>(props: TableProps<T>) => ReactNode = ({
   data: defaultData,
   columnDef: defaultColumns,
-  pageSize,
   style,
   captionTop,
-  usePagination,
-  enableRowSelection = false,
+  enableRowSelection,
+  sorting,
+  setSorting,
+  usePagination = true,
 }) => {
   const [data] = useState(() => [...defaultData])
   const [columns] = useState<typeof defaultColumns>(() => [...defaultColumns])
@@ -74,8 +72,9 @@ export const Table: <T>(props: TableProps<T>) => ReactNode = ({
   const [columnOrder, setColumnOrder] = useState<string[]>(() => columns.map((c) => c.id!))
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: pageSize ?? 50,
+    pageSize: 10,
   })
+  const useSorting = !!sorting && !!setSorting
 
   const table = useReactTable({
     columns,
@@ -88,9 +87,12 @@ export const Table: <T>(props: TableProps<T>) => ReactNode = ({
     onPaginationChange: setPagination,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
     enableRowSelection,
     enableMultiRowSelection: false,
     manualPagination: !usePagination,
+    manualSorting: useSorting,
+    isMultiSortEvent: () => true,
     defaultColumn: {
       minSize: 60,
       maxSize: 800,
@@ -101,6 +103,7 @@ export const Table: <T>(props: TableProps<T>) => ReactNode = ({
       columnOrder,
       pagination,
       columnVisibility,
+      sorting,
     },
   })
 
@@ -125,47 +128,31 @@ export const Table: <T>(props: TableProps<T>) => ReactNode = ({
   return (
     <>
       {usePagination && (
-        <CPagination size="sm" align="end">
-          <CPaginationItem
-            aria-label="Previous"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <span aria-hidden="true">{'<'}</span>
-          </CPaginationItem>
-          {range(table.getPageCount()).map((pageIndex) => {
-            const currPageIndexState = table.getState().pagination.pageIndex
-
-            if (
-              pageIndex == 0 ||
-              (pageIndex >= currPageIndexState - 1 && pageIndex <= currPageIndexState + 1) ||
-              pageIndex + 1 == table.getPageCount()
-            ) {
-              return (
-                <CPaginationItem
-                  key={pageIndex}
-                  onClick={() => table.setPageIndex(pageIndex)}
-                  active={currPageIndexState == pageIndex}
-                >
-                  <span aria-hidden="true">{pageIndex + 1}</span>
-                </CPaginationItem>
-              )
-            } else if (pageIndex >= currPageIndexState - 2 && pageIndex <= currPageIndexState + 2) {
-              return (
-                <CPaginationItem disabled={true}>
-                  <span aria-hidden="true">{'...'}</span>
-                </CPaginationItem>
-              )
-            }
-          })}
-          <CPaginationItem
-            aria-label="Next"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <span aria-hidden="true">{'>'}</span>
-          </CPaginationItem>
-        </CPagination>
+        <CRow>
+          <CCol lg={2}>
+            <CRow>
+              <CFormLabel htmlFor="page_number" className="col-sm-4 col-form-label">
+                Show
+              </CFormLabel>
+              <CCol sm={8}>
+                <CFormSelect
+                  id="page_number"
+                  value={table.getState().pagination.pageSize.toString()}
+                  onChange={(e) => {
+                    table.setPageSize(Number(e.target.value))
+                  }}
+                  options={[10, 20, 30, 40, 50].map((value) => {
+                    return {
+                      label: `${value} rows`,
+                      value: value.toString(),
+                    }
+                  })}
+                />
+              </CCol>
+            </CRow>
+          </CCol>
+          <CCol lg={10}></CCol>
+        </CRow>
       )}
       <DndContext
         collisionDetection={closestCenter}
@@ -178,17 +165,69 @@ export const Table: <T>(props: TableProps<T>) => ReactNode = ({
           style={style}
           columnOrder={columnOrder}
           captionTop={captionTop}
+          useSorting={useSorting}
         />
       </DndContext>
+      {usePagination && (
+        <CRow>
+          <CCol lg={4}>
+            <span>
+              {table.getState().pagination.pageIndex + 1} of {table.getPageCount().toLocaleString()}{' '}
+              pages
+            </span>
+          </CCol>
+          <CCol lg={8}>
+            <CPagination align="end">
+              <CPaginationItem
+                aria-label="Previous"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <span aria-hidden="true">{'<'}</span>
+              </CPaginationItem>
+              {range(table.getPageCount()).map((pageIndex) => {
+                const currPageIndexState = table.getState().pagination.pageIndex
+
+                if (
+                  pageIndex == 0 ||
+                  (pageIndex >= currPageIndexState - 1 && pageIndex <= currPageIndexState + 1) ||
+                  pageIndex + 1 == table.getPageCount()
+                ) {
+                  return (
+                    <CPaginationItem
+                      key={pageIndex}
+                      onClick={() => table.setPageIndex(pageIndex)}
+                      active={currPageIndexState == pageIndex}
+                    >
+                      <span aria-hidden="true">{pageIndex + 1}</span>
+                    </CPaginationItem>
+                  )
+                } else if (
+                  pageIndex >= currPageIndexState - 2 &&
+                  pageIndex <= currPageIndexState + 2
+                ) {
+                  return (
+                    <CPaginationItem disabled={true}>
+                      <span aria-hidden="true">{'...'}</span>
+                    </CPaginationItem>
+                  )
+                }
+              })}
+              <CPaginationItem
+                aria-label="Next"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                <span aria-hidden="true">{'>'}</span>
+              </CPaginationItem>
+            </CPagination>
+          </CCol>
+        </CRow>
+      )}
     </>
   )
 }
 
-type TableContextMenuType = <T>(
-  props: {
-    table: TableReturn<T>
-  } & ContextMenuProps,
-) => JSX.Element
 const TableContextMenu: TableContextMenuType = ({ table, ...rest }) => {
   return (
     <ContextMenu {...rest}>
@@ -204,7 +243,7 @@ const TableContextMenu: TableContextMenuType = ({ table, ...rest }) => {
             key={index}
             checked={column.getIsVisible()}
             onChange={column.getToggleVisibilityHandler()}
-            label={column.id}
+            label={column.columnDef.header?.toString()}
             disabled={!column.getCanHide()}
           />
         )
@@ -213,8 +252,7 @@ const TableContextMenu: TableContextMenuType = ({ table, ...rest }) => {
   )
 }
 
-type DraggableHeaderType = <T>({ header }: { header: Header<T, unknown> }) => JSX.Element
-const DraggableHeader: DraggableHeaderType = ({ header }) => {
+const DraggableHeader: DraggableHeaderType = ({ header, useSorting }) => {
   const { attributes, isDragging, listeners, setNodeRef, transform } = useSortable({
     id: header.column.id,
   })
@@ -231,17 +269,35 @@ const DraggableHeader: DraggableHeaderType = ({ header }) => {
 
   return (
     <CTableHeaderCell colSpan={header.colSpan} ref={setNodeRef} style={style}>
-      {header.isPlaceholder
-        ? null
-        : flexRender(header.column.columnDef.header, header.getContext())}
-      <CButton {...attributes} {...listeners}>
-        <Icon icon="mdi:drag" inline />
-      </CButton>
+      {header.isPlaceholder ? null : (
+        <div className="d-flex justify-content-between align-items-center">
+          <span
+            onClick={header.column.getToggleSortingHandler()}
+            className={header.column.getCanSort() ? '' : 'pe-none user-select-none'}
+          >
+            {flexRender(header.column.columnDef.header, header.getContext())}
+            {useSorting && header.column.getCanSort() && (
+              <Icon
+                className="icon-lg mx-1"
+                height="none"
+                icon={
+                  {
+                    asc: 'prime:sort-up-fill',
+                    desc: 'prime:sort-down-fill',
+                  }[header.column.getIsSorted() as string] ?? 'prime:sort'
+                }
+              />
+            )}
+          </span>
+          <CButton {...attributes} {...listeners}>
+            <Icon className="icon icon-lg" height="none" icon="mdi:drag" />
+          </CButton>
+        </div>
+      )}
     </CTableHeaderCell>
   )
 }
 
-type DragAlongCellType = <T>({ cell }: { cell: Cell<T, unknown> }) => JSX.Element
 const DragAlongCell: DragAlongCellType = ({ cell }) => {
   const { isDragging, setNodeRef, transform } = useSortable({
     id: cell.column.id,
@@ -269,12 +325,7 @@ const DragAlongCell: DragAlongCellType = ({ cell }) => {
   )
 }
 
-interface TableContentProps<T> extends CTableProps {
-  table: TableReturn<T>
-  columnOrder: string[]
-}
-type TableElementType = <T>(props: TableContentProps<T>) => JSX.Element
-const TableContent: TableElementType = ({ table, style, columnOrder, captionTop }) => {
+const TableContent: TableContentType = ({ table, style, columnOrder, captionTop, useSorting }) => {
   const [visible, setVisible] = useState(false)
   const [position, setPosition] = useState({
     top: '0px',
@@ -283,7 +334,7 @@ const TableContent: TableElementType = ({ table, style, columnOrder, captionTop 
 
   return (
     <>
-      <div className="table-responsive" style={style}>
+      <div className="table-responsive py-3" style={style}>
         <CTable bordered hover captionTop={captionTop}>
           <CTableHead
             color="primary position-sticky top-0 z-1"
@@ -300,7 +351,7 @@ const TableContent: TableElementType = ({ table, style, columnOrder, captionTop 
               <CTableRow key={headerGroup.id}>
                 <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
                   {headerGroup.headers.map((header) => (
-                    <DraggableHeader header={header} key={header.id} />
+                    <DraggableHeader useSorting={useSorting} header={header} key={header.id} />
                   ))}
                 </SortableContext>
               </CTableRow>
@@ -360,3 +411,5 @@ const TableContent: TableElementType = ({ table, style, columnOrder, captionTop 
     </>
   )
 }
+
+export default Table

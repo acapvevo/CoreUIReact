@@ -1,4 +1,3 @@
-import type { Field } from 'react-querybuilder'
 import { QueryBuilder } from 'react-querybuilder'
 import 'react-querybuilder/dist/query-builder.scss'
 import {
