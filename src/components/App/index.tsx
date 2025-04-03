@@ -1,8 +1,7 @@
-import AppBreadcrumb from './AppBreadcrumb'
-import AppContent from './AppContent'
-import AppFooter from './AppFooter'
-import AppHeader from './AppHeader'
-import AppHeaderDropdown from './AppHeaderDropdown'
-import AppSidebar from './AppSidebar'
+import AppBreadcrumb from './Breadcrumb'
+import AppContent from './Content'
+import AppFooter from './Footer'
+import Header from './Header'
+import AppSidebar from './Sidebar'
 
-export { AppBreadcrumb, AppContent, AppFooter, AppHeader, AppHeaderDropdown, AppSidebar }
+export { AppBreadcrumb, AppContent, AppFooter, Header, AppSidebar }

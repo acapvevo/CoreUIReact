@@ -16,9 +16,10 @@ import { UseFormReturn } from 'react-hook-form'
 import { usePhoneInput, defaultCountries, parseCountry, FlagImage } from 'react-international-phone'
 import LoadingContent from '../Loading/Content'
 import 'react-international-phone/style.css'
+import { useTranslation } from 'react-i18next'
 
 const Profile = ({
-  enabled,
+  enabled = false,
   form: {
     register,
     setValue,
@@ -28,9 +29,10 @@ const Profile = ({
     getValues,
   },
 }: {
-  enabled: boolean
+  enabled?: boolean
   form: UseFormReturn<UserInput>
 }) => {
+  const {t} = useTranslation()
   const { data, isLoading } = useAppQuery<User>({
     url: `/profile`,
     queryKey: ['profile', 'update'],
@@ -64,7 +66,7 @@ const Profile = ({
     <CRow lg={{ gutterX: 2, gutterY: 2 }}>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel="Name"
+          floatingLabel={t('name')}
           type="text"
           id="name"
           invalid={!!errors.name}
@@ -74,20 +76,20 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormSelect
-          floatingLabel="Gender"
+          floatingLabel={t('gender')}
           id="gender"
           invalid={!!errors.gender}
           feedbackInvalid={errors.gender?.message}
           {...register('gender')}
           options={[
-            { label: 'Male', value: 'M' },
-            { label: 'Female', value: 'F' },
+            { label: t('male'), value: 'M' },
+            { label: t('female'), value: 'F' },
           ]}
         />
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel="Email"
+          floatingLabel={t('email_address')}
           type="email"
           id="email"
           invalid={!!errors['email']}
@@ -118,7 +120,7 @@ const Profile = ({
             </CDropdownMenu>
           </CDropdown>
           <CFormInput
-            floatingLabel="Phone Number"
+            floatingLabel={t('phone_number')}
             type="tel"
             value={inputValue}
             invalid={!!errors.phone_number}
@@ -129,7 +131,7 @@ const Profile = ({
       </CCol>
       <CCol lg={12}>
         <CFormInput
-          floatingLabel="Address 1"
+          floatingLabel={t('address', {num: 1})}
           type="text"
           id="address_1"
           invalid={!!errors.address?.line_1}
@@ -139,7 +141,7 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel="Address 2"
+          floatingLabel={t('address', {num: 2})}
           type="text"
           id="address_2"
           invalid={!!errors.address?.line_2}
@@ -149,7 +151,7 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel="Address 3"
+          floatingLabel={t('address', {num: 3})}
           type="text"
           id="address_3"
           invalid={!!errors.address?.line_3}
@@ -159,7 +161,7 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel="Postcode"
+          floatingLabel={t('postcode')}
           type="text"
           id="postcode"
           invalid={!!errors.address?.postcode}
@@ -169,7 +171,7 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel="City"
+          floatingLabel={t('city')}
           type="text"
           id="city"
           invalid={!!errors.address?.city}
@@ -179,7 +181,7 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel="State"
+          floatingLabel={t('state')}
           type="text"
           id="state"
           invalid={!!errors.address?.state}
@@ -189,7 +191,7 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormSelect
-          floatingLabel="Country"
+          floatingLabel={t('country')}
           id="country"
           options={defaultCountries.map((c) => {
             const country = parseCountry(c)

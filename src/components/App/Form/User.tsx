@@ -1,4 +1,4 @@
-import { useAppQuery, useAppSuspenseQuery } from '@/libs/react-query'
+import { useAppQuery } from '@/libs/react-query'
 import { Form } from '@/types/form'
 import { Role } from '@/types/models/role'
 import { RolesInput, User, UserInput } from '@/types/models/user'
@@ -17,11 +17,10 @@ import {
   CFormLabel,
 } from '@coreui/react'
 import { FlagImage, defaultCountries, parseCountry, usePhoneInput } from 'react-international-phone'
-import { Controller, SubmitHandler } from 'react-hook-form'
-import Select from 'react-select'
+import { Controller } from 'react-hook-form'
 import 'react-international-phone/style.css'
-import useRequest from '@/hooks/request'
-import AsyncSelect from 'react-select/async'
+import { useTranslation } from 'react-i18next'
+import Select from '../Input/Select'
 
 const UserForm = ({
   id,
@@ -36,7 +35,8 @@ const UserForm = ({
     control,
     formState: { errors },
   },
-}: {} & Form<UserInput & RolesInput>) => {
+}: Form<UserInput & RolesInput>) => {
+  const { t } = useTranslation()
   const { data: roles, isFetching: isRolesFetching } = useAppQuery<Role[]>({
     url: `/setting/role`,
     method: 'GET',
@@ -56,7 +56,7 @@ const UserForm = ({
     setCountry,
   } = usePhoneInput({
     countries: defaultCountries,
-    defaultCountry: getValues('phone_number.iso2') ?? undefined,
+    defaultCountry: getValues('phone_number.iso2') ?? 'my',
     value: getValues('phone_number.number') ?? undefined,
     onChange: (data) => {
       setValue('phone_number.number', data.phone)
@@ -66,7 +66,7 @@ const UserForm = ({
 
   useEffect(() => {
     if (user) {
-      reset(user)
+      reset({ ...user, roles: user.role_names })
     }
   }, [user, isFetching])
 
@@ -76,7 +76,7 @@ const UserForm = ({
     <CRow lg={{ gutterX: 2, gutterY: 2 }}>
       <CCol lg={6}>
         <CFormInput
-          label="Username"
+          label={t('username')}
           type="text"
           id="username"
           invalid={!!errors.username}
@@ -91,13 +91,13 @@ const UserForm = ({
           control={control}
           render={({
             field: { onChange, disabled, value, name, onBlur, ref },
-            fieldState,
             formState: { errors },
           }) => {
             return (
               <>
-                <CFormLabel htmlFor="roles">Roles</CFormLabel>
+                <CFormLabel htmlFor="roles">{t('roles')}</CFormLabel>
                 <Select
+                  async={false}
                   id="roles"
                   name={name}
                   classNames={{
@@ -111,7 +111,7 @@ const UserForm = ({
                   ref={ref}
                   isDisabled={disabled}
                   isLoading={isRolesFetching}
-                  options={roles!.map((role) => {
+                  options={roles?.map((role) => {
                     return {
                       value: role.name,
                       label: role.name,
@@ -134,7 +134,7 @@ const UserForm = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          label="Name"
+          label={t('name')}
           type="text"
           id="name"
           invalid={!!errors.name}
@@ -144,20 +144,20 @@ const UserForm = ({
       </CCol>
       <CCol lg={6}>
         <CFormSelect
-          label="Gender"
+          label={t('gender')}
           id="gender"
           invalid={!!errors.gender}
           feedbackInvalid={errors.gender?.message}
           {...register('gender', { disabled: viewing })}
           options={[
-            { label: 'Male', value: 'M' },
-            { label: 'Female', value: 'F' },
+            { label: t('male'), value: 'M' },
+            { label: t('female'), value: 'F' },
           ]}
         />
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          label="Email"
+          label={t('email_address')}
           type="email"
           id="email"
           invalid={!!errors['email']}
@@ -168,11 +168,11 @@ const UserForm = ({
         />
       </CCol>
       <CCol lg={6}>
-        <CFormLabel htmlFor="phone_number">Phone Number</CFormLabel>
+        <CFormLabel htmlFor="phone_number">{t('phone_number')}</CFormLabel>
         <CInputGroup size="sm" id="phone_number">
           <CDropdown variant="input-group" direction="dropend">
             <CDropdownToggle color="secondary" variant="outline">
-              <FlagImage iso2={watch('phone_number.iso2') ?? undefined} />
+              <FlagImage iso2={watch('phone_number.iso2') ?? 'my'} />
             </CDropdownToggle>
             <CDropdownMenu className="overflow-auto" style={{ height: '300px' }}>
               {defaultCountries.map((c) => {
@@ -204,7 +204,7 @@ const UserForm = ({
       </CCol>
       <CCol lg={12}>
         <CFormInput
-          label="Address 1"
+          label={t('address', { num: 1 })}
           type="text"
           id="address_1"
           invalid={!!errors.address?.line_1}
@@ -214,7 +214,7 @@ const UserForm = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          label="Address 2"
+          label={t('address', { num: 2 })}
           type="text"
           id="address_2"
           invalid={!!errors.address?.line_2}
@@ -224,7 +224,7 @@ const UserForm = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          label="Address 3"
+          label={t('address', { num: 3 })}
           type="text"
           id="address_3"
           invalid={!!errors.address?.line_3}
@@ -234,7 +234,7 @@ const UserForm = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          label="Postcode"
+          label={t('postcode')}
           type="text"
           id="postcode"
           invalid={!!errors.address?.postcode}
@@ -244,7 +244,7 @@ const UserForm = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          label="City"
+          label={t('city')}
           type="text"
           id="city"
           invalid={!!errors.address?.city}
@@ -254,7 +254,7 @@ const UserForm = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          label="State"
+          label={t('state')}
           type="text"
           id="state"
           invalid={!!errors.address?.state}
@@ -264,7 +264,7 @@ const UserForm = ({
       </CCol>
       <CCol lg={6}>
         <CFormSelect
-          label="Country"
+          label={t('country')}
           id="country"
           options={defaultCountries.map((c) => {
             const country = parseCountry(c)

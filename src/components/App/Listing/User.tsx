@@ -3,91 +3,70 @@ import { useAppQuery } from '@/libs/react-query'
 import sweetAlert from '@/libs/sweet-alert2'
 import { UserListingProps } from '@/types/listings/user'
 import { User } from '@/types/models/user'
-import { useEffect, useState } from 'react'
-import Action from '../Button/Action'
+import { useEffect } from 'react'
 import LoadingContent from '../Loading/Content'
-import { formatQuery, RuleGroupType } from 'react-querybuilder'
 import SearchBuilder from '../SearchBuilder'
-import { generateColumnDefObject } from '@/utils/table'
+import { generateColumnDefObject, generateStatusColumnDef } from '@/utils/table'
 import { formatForDateTimeLocalInput } from '@/libs/luxon'
-import { Column } from '@/types/components/table'
-import { SortingState } from '@tanstack/react-table'
+import { Column, Paginate } from '@/types/components/table'
 import Table from '../Table'
+import { useTranslation } from 'react-i18next'
+import useTable from '@/hooks/table'
+import { ActionContextMenuButton, ActionGroupButton } from '@/components/App/Button'
+import LoadingModal from '@/components/App/Loading/Modal'
+import { Role } from '@/types/models/role'
 
 const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProps) => {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [query, setQuery] = useState<RuleGroupType>({ combinator: 'and', rules: [] })
-  const { data, refetch, isFetching } = useAppQuery<User[]>({
-    url: `/setting/user?query=${formatQuery(query, 'json_without_ids')}&sort=${encodeURIComponent(JSON.stringify(sorting))}`,
+  const { t } = useTranslation()
+  const {
+    paginationState: [pagination, setPagination],
+    sortingState: [sorting, setSorting],
+    queryState: [query, setQuery],
+    params,
+  } = useTable()
+  const { data, refetch, isFetching } = useAppQuery<Paginate<User>>({
+    url: `/setting/user?${params.toString()}`,
     method: 'GET',
     queryKey: ['user', 'list'],
   })
-  const { deleteAsync } = useRequest('/setting/user')
+  const { deleteAsync, isLoading } = useRequest('/setting/user')
   const fields: Column<User>[] = [
-    { name: 'name', label: 'Name', ...generateColumnDefObject<User>('Name', 'name') },
+    {
+      label: t('name'),
+      name: 'name',
+      ...generateColumnDefObject<User>(t('name'), 'name'),
+      includeInQuery: true,
+      includeInTable: true,
+    },
     {
       name: 'email',
-      label: 'Email Address',
-      ...generateColumnDefObject<User>('Email Address', 'email'),
+      label: t('email_address'),
+      ...generateColumnDefObject<User>(t('email_address'), 'email'),
+      includeInQuery: true,
+      includeInTable: true,
+    },
+    {
+      name: 'role_names',
+      label: t('roles'),
+      ...generateColumnDefObject<User>(t('roles'), 'role_names'),
+      includeInQuery: true,
+      includeInTable: true,
     },
     {
       name: 'created_at',
-      label: 'Created At',
+      label: t('created_at'),
       inputType: 'datetime-local',
       defaultValue: formatForDateTimeLocalInput(new Date()),
-      ...generateColumnDefObject<User>('Created At', 'created_at'),
+      ...generateColumnDefObject<User>(t('created_at'), 'created_at'),
+      includeInQuery: true,
+      includeInTable: true,
     },
-    {
-      header: 'Action',
-      enableHiding: false,
-      enableSorting: false,
-      cell: (cell) => {
-        return (
-          <Action
-            onClickView={() => {
-              setViewing(true)
-              setID(cell.row.original.id)
-              setVisible(true)
-            }}
-            onClickEdit={() => {
-              setViewing(false)
-              setID(cell.row.original.id)
-              setVisible(true)
-            }}
-            onClickDelete={() => {
-              sweetAlert({
-                title: 'Delete User',
-                text: 'Are you sure you want to delete this user?',
-                type: 'question',
-                showCancelButton: true,
-                cancelButtonText: 'No',
-                confirmButtonText: 'Yes',
-              }).then(async (result) => {
-                if (result.isConfirmed) {
-                  const isSuccess = await deleteAsync(cell.row.original.id)
-
-                  if (isSuccess) refetch()
-                }
-              })
-            }}
-          />
-        )
-      },
-      meta: {
-        getCellContext: () => {
-          return {
-            style: { width: '5%' },
-          }
-        },
-      },
-    },
+    generateStatusColumnDef(),
   ]
 
   useEffect(() => {
     refetch()
-  }, [counter, query, sorting])
-
-  if (isFetching) return <LoadingContent />
+  }, [counter, query, sorting, pagination])
 
   return (
     <>
@@ -95,15 +74,86 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
         <SearchBuilder
           query={query}
           setQuery={setQuery}
-          fields={fields.filter((field) => field.header !== 'Action')}
+          fields={fields.filter((field) => field.includeInQuery)}
         />
       </div>
-      <Table
-        data={data!.filter((role) => !role.deleted_at)}
-        columnDef={fields}
-        sorting={sorting}
-        setSorting={setSorting}
-      />
+      {isFetching ? (
+        <LoadingContent />
+      ) : (
+        <Table
+          data={data}
+          columnDef={fields.filter((field) => field.includeInTable)}
+          sorting={sorting}
+          setSorting={setSorting}
+          pagination={pagination}
+          setPagination={setPagination}
+          RowsContextMenu={({
+            row: {
+              original: { id, deleted_at },
+            },
+          }) => {
+            return (
+              <>
+                <ActionContextMenuButton
+                  viewDropdownItemProps={{
+                    onClick: () => {
+                      setViewing(true)
+                      setID(id)
+                      setVisible(true)
+                    },
+                  }}
+                  editDropdownItemProps={{
+                    onClick: () => {
+                      setViewing(false)
+                      setID(id)
+                      setVisible(true)
+                    },
+                  }}
+                  deleteDropdownItemProps={{
+                    className: !!deleted_at ? 'd-none' : '',
+                    onClick: () => {
+                      sweetAlert({
+                        title: t('delete_user'),
+                        text: t('are_you_sure_you_want_to_delete_this_user?'),
+                        type: 'question',
+                        showCancelButton: true,
+                        cancelButtonText: t('no'),
+                        confirmButtonText: t('yes'),
+                      }).then(async (result) => {
+                        if (result.isConfirmed) {
+                          const isSuccess = await deleteAsync(id)
+
+                          if (isSuccess) refetch()
+                        }
+                      })
+                    },
+                  }}
+                  restoreDropdownItemProps={{
+                    className: !!deleted_at ? '' : 'd-none',
+                    onClick: () => {
+                      sweetAlert({
+                        title: t('restore_user'),
+                        text: t('are_you_sure_you_want_to_restore_this_user?'),
+                        type: 'question',
+                        showCancelButton: true,
+                        cancelButtonText: t('no'),
+                        confirmButtonText: t('yes'),
+                      }).then(async (result) => {
+                        if (result.isConfirmed) {
+                          const isSuccess = await deleteAsync(`${id}`)
+
+                          if (isSuccess) refetch()
+                        }
+                      })
+                    },
+                  }}
+                />
+              </>
+            )
+          }}
+        />
+      )}
+      <LoadingModal loading={isLoading} />
     </>
   )
 }

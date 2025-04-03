@@ -1,11 +1,10 @@
-import { z } from 'zod'
+import { z } from '@/libs/zod'
 import { Model } from '../model'
 import { User } from './user'
 
 export interface Role extends Model, RoleInput {
   guard_name: string
-  created_by: number
-  user: User
+  in_used: boolean
 }
 
 export type RoleInput = z.infer<typeof RoleScheme>

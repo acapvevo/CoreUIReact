@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   CButton,
   CCard,
@@ -22,58 +22,65 @@ import useAuth from '@/hooks/auth'
 import LoadingButton from '@/components/App/Loading/Button'
 import { getLocalTimezone } from '@/libs/luxon'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { LoginInput, LoginScheme } from '@/types/models/user'
-import { useLocation } from 'react-router-dom'
+import { LoginInput, LoginScheme, UserToken } from '@/types/models/user'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useGuestMutation } from '@/libs/react-query'
 
 const Login = () => {
-  const [loading, setLoading] = useState(false)
+  const { t } = useTranslation()
   const location = useLocation()
-  const redirectToAfterAuthenticated = location.state ? location.state.redirectTo : queryString.parse(location.search)['redirectTo'] as string
-  const { loginWithPost } = useAuth(redirectToAfterAuthenticated)
+  const navigate = useNavigate()
+  const redirectToAfterAuthenticated = location.state
+    ? location.state.redirectTo
+    : queryString.parse(location.search)['redirectTo']
+  const { login } = useAuth(redirectToAfterAuthenticated)
   const {
     register,
     handleSubmit,
-    control,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<LoginInput>({
     defaultValues: {
       username: '',
       password: '',
       remember_me: false,
-      timezone: getLocalTimezone('z'),
     },
-    resolver: zodResolver(LoginScheme)
+    resolver: zodResolver(LoginScheme),
+  })
+  const { mutate, isPending } = useGuestMutation<LoginInput, UserToken>({
+    url: 'login',
+    method: 'POST',
+    onSuccess: ({ data }) => {
+      login(data)
+    },
   })
 
-  const onSubmit: SubmitHandler<LoginInput> = (data) => {
-    setLoading(true)
-
-    loginWithPost(data).finally(() => {
-      setLoading(false)
-    })
-  }
+  const onSubmit = handleSubmit((data) => {
+    mutate(data)
+  })
 
   return (
     <CContainer>
       <CRow className="justify-content-center">
         <CCol md={8}>
           <CCard>
-            <CCardBody className='p-4'>
-              <CForm onSubmit={handleSubmit(onSubmit)}>
-                <h1>Login</h1>
-                <p className="text-body-secondary">Sign In to your account</p>
+            <CCardBody className="p-4">
+              <CForm onSubmit={onSubmit}>
+                <h1>{t('login')}</h1>
+                <p className="text-body-secondary">{t('sign_in_to_your_account')}</p>
                 <CInputGroup className="mb-3">
                   <CInputGroupText>
                     <CIcon icon={cilUser} />
                   </CInputGroupText>
                   <CFormInput
                     {...register('username', { required: true })}
-                    invalid={errors.username ? true : false}
-                    valid={!errors.username && watch('username') ? true : false}
+                    invalid={!!errors.username}
+                    valid={!!(!errors.username && watch('username'))}
                     feedback={errors.username?.message}
                     type="string"
-                    placeholder="Username"
+                    placeholder={t('username')}
                     autoComplete="username"
                   />
                 </CInputGroup>
@@ -83,38 +90,38 @@ const Login = () => {
                   </CInputGroupText>
                   <CFormInput
                     {...register('password', { required: true })}
-                    invalid={errors.password ? true : false}
-                    valid={!errors.password && watch('password') ? true : false}
+                    invalid={!!errors.password}
+                    valid={!!(!errors.password && watch('password'))}
                     feedback={errors.password?.message}
                     type="password"
-                    placeholder="Password"
+                    placeholder={t('password')}
                     autoComplete="current-password"
                   />
                 </CInputGroup>
                 <CInputGroup className="mb-4">
-                  <CFormCheck label="Remember Me" {...register('remember_me')} />
+                  <CFormCheck label={t('remember_me')} {...register('remember_me')} />
                 </CInputGroup>
-                <CRow>
-                  <CCol xs={6}>
-                    <LoadingButton
-                      color="primary"
-                      className="px-4"
-                      type="submit"
-                      text="Login"
-                      loadingText="Login"
-                      processing={loading}
-                    />
-                  </CCol>
-                  <CCol xs={6} className="d-flex justify-content-end">
-                    <CButton color="link" className="px-0">
-                      Forgot password?
-                    </CButton>
-                  </CCol>
-                </CRow>
+                <div className="d-grid gap-2 d-md-flex justify-content-md-between">
+                  <LoadingButton
+                    color="primary"
+                    className="px-4"
+                    type="submit"
+                    text={t('login')}
+                    loadingText={t('logging_in')}
+                    processing={isPending}
+                  />
+                  <CButton
+                    color="link"
+                    className="px-0"
+                    onClick={() => navigate('/ForgotPassword')}
+                  >
+                    {t('forgot_your_password?')}
+                  </CButton>
+                </div>
               </CForm>
             </CCardBody>
-            <CCardFooter className='d-flex justify-content-center'>
-              No Account?&nbsp;<a href='/Auth/Register'>Sign Up Here</a>
+            <CCardFooter className="d-flex justify-content-center">
+              {t('no_account?')}&nbsp;<a href="/Register">{t('sign_up_here')}</a>
             </CCardFooter>
           </CCard>
         </CCol>

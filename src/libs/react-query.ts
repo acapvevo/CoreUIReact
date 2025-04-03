@@ -11,13 +11,10 @@ import {
 } from '@tanstack/react-query'
 import useAuthHeader from 'react-auth-kit/hooks/useAuthHeader'
 import axios, { getError } from './axios'
-import { AxiosResponse, Method } from 'axios'
-import sweetAlert, { Alert } from './sweet-alert2'
-import { error } from 'console'
+import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import sweetAlert, { AlertProps } from './sweet-alert2'
 
-interface QueryProps<T, Q> extends UseQueryOptions<T> {
-  url: string
-  method: Method
+interface QueryProps<T, Q> extends UseQueryOptions<T>, AxiosRequestConfig<Q> {
   payload?: Q
 }
 
@@ -26,7 +23,7 @@ export const useAppQuery: AppQuery = (config) => {
   const header = useAuthHeader()
   const { url, method, payload, ...queryOption } = config
 
-  const query = useQuery({
+  return useQuery({
     ...queryOption,
     retry: false,
     queryFn: async () => {
@@ -47,8 +44,6 @@ export const useAppQuery: AppQuery = (config) => {
       }
     },
   })
-
-  return query
 }
 
 type AppSuspenseQuery = <T, Q = { [k: string]: any }>(
@@ -117,40 +112,49 @@ export const useAppQueries: AppQueries = (configs) => {
   return queries
 }
 
-interface MutationProps<T, R> extends UseMutationOptions<AxiosResponse<R & Alert, any>, Error, T> {
-  url: string
-  method: Method
-  success: (data: R) => void
-}
+type UseMutationProps<T, R> = {
+  success?: (data: R) => void
+} & UseMutationOptions<AxiosResponse<R & Pick<AlertProps, 'type' | 'text'>, any>, Error, T> &
+  AxiosRequestConfig<T>
 
-type AppMutation = <T, R>(
-  props: MutationProps<T, R>,
-) => UseMutationResult<AxiosResponse<R & Alert, T>, Error, T>
-export const useAppMutation = function <T, R>({ url, method, success }: MutationProps<T, R>) {
+type UseMutation = <T, R>(
+  props: UseMutationProps<T, R>,
+) => UseMutationResult<AxiosResponse<R & Pick<AlertProps, 'type' | 'text'>, T>, Error, T>
+export const useAppMutation = function <T, R>({ headers, ...props }: UseMutationProps<T, R>) {
   const header = useAuthHeader()
 
-  const mutation = useMutation<AxiosResponse<R & Alert, T>, Error, T>({
-    mutationFn: (data) => {
-      return axios({
-        url,
-        method,
-        data,
-        headers: {
-          Authorization: header,
-        },
-      })
-    },
-    onSuccess: (response) => {
-      sweetAlert(response.data)
-      success(response.data)
-    },
-    onError: (error) => {
-      sweetAlert({
-        text: error.message,
-        type: 'error',
-      })
+  return useGuestMutation({
+    ...props,
+    headers: {
+      ...headers,
+      Authorization: header,
     },
   })
+}
 
-  return mutation
+export const useGuestMutation = function <T, R>({
+  success,
+  onSuccess,
+  onError,
+  ...props
+}: UseMutationProps<T, R>) {
+  return useMutation<AxiosResponse<R & Pick<AlertProps, 'type' | 'text'>, T>, Error, T>({
+    mutationFn: (data) => {
+      return axios({
+        ...props,
+        data,
+      })
+    },
+    ...props,
+    onSuccess: (response, variables, context) => {
+      const { data } = response
+      data.type && data.text && sweetAlert(data)
+      !!success && success(data)
+      onSuccess && onSuccess(response, variables, context)
+    },
+    onError: (error, variables, context) => {
+      sweetAlert(getError(error))
+      onError && onError(error, variables, context)
+    },
+  })
 }

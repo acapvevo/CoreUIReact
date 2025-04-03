@@ -1,0 +1,35 @@
+@import "@coreui/coreui/scss/coreui";
+
+:root {
+  --select-padding-y: #{$form-select-padding-y}; //
+  --select-padding-x: #{$form-select-padding-x}; //
+  --select-font-size: #{$form-select-font-size}; //
+  --select-indicator-padding: #{$form-select-indicator-padding};
+  --select-font-weight: #{$form-select-font-weight}; //
+  --select-line-height: #{$form-select-line-height}; //
+  --select-color: #{$form-select-color}; //
+  --select-bg: #{$form-select-bg}; //
+  --select-disabled-color: #{$form-select-disabled-color};
+  --select-disabled-bg: #{$form-select-disabled-bg};
+  --select-disabled-border-color: #{$form-select-disabled-border-color};
+  --select-bg-position: #{$form-select-bg-position};
+  --select-bg-size: #{$form-select-bg-size};
+  --select-indicator: #{escape-svg($form-select-indicator)};
+  --select-feedback-icon-padding-end: #{$form-select-feedback-icon-padding-end};
+  --select-feedback-icon-position: #{$form-select-feedback-icon-position};
+  --select-feedback-icon-size: #{$form-select-feedback-icon-size};
+  --select-border-width: #{$form-select-border-width}; //
+  --select-border-color: #{$form-select-border-color}; //
+  --select-focus-border-color: #{$form-select-focus-border-color}; //
+  --select-padding-y-sm: #{$form-select-padding-y-sm};
+  --select-padding-x-sm: #{$form-select-padding-x-sm};
+  --select-font-size-sm: #{$form-select-font-size-sm};
+  --select-padding-y-lg: #{$form-select-padding-y-lg};
+  --select-padding-x-lg: #{$form-select-padding-x-lg};
+  --select-font-size-lg: #{$form-select-font-size-lg};
+  @if $enable-rounded {
+    --select-border-radius: #{$form-select-border-radius}; //
+  } @else {
+    --select-border-radius: 0; //
+  }
+}

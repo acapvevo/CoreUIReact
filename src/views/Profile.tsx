@@ -1,7 +1,14 @@
 import LoadingContent from '@/components/App/Loading/Content'
 import { useAppMutation, useAppQuery } from '@/libs/react-query'
-import { ModalComponentProps } from '@/types/components/modal'
-import { Gender, PasswordInput, PasswordScheme, User, UserInput, UserSchema } from '@/types/models/user'
+import { ModalProps } from '@/types/components/modal'
+import {
+  Gender,
+  PasswordInput,
+  PasswordScheme,
+  User,
+  UserInput,
+  UserSchema,
+} from '@/types/models/user'
 import { CButton, CCard, CCardBody, CCol, CFormInput, CImage, CRow } from '@coreui/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
@@ -13,8 +20,11 @@ import { UploadFileInput } from '@/types/forms/uploadFile'
 import UploadFile from '@/components/App/Form/UploadFile'
 import { Alert } from '@/libs/sweet-alert2'
 import Password from '@/components/App/Form/Password'
+import { useTranslation } from 'react-i18next'
 
-const UpdatePasswordModal = (props: ModalComponentProps) => {
+const UpdatePasswordModal = (props: ModalProps) => {
+  const { t } = useTranslation()
+  const { onClose } = props
   const form = useForm<PasswordInput>({
     defaultValues: {
       password: '',
@@ -27,7 +37,7 @@ const UpdatePasswordModal = (props: ModalComponentProps) => {
     url: '/profile/password',
     method: 'POST',
     success: () => {
-      props.onClose()
+      onClose && onClose()
     },
   })
 
@@ -38,22 +48,25 @@ const UpdatePasswordModal = (props: ModalComponentProps) => {
   return (
     <Modal
       {...props}
-      title="Change Password"
-      body={<Password form={form} />}
+      title={t('change_password')}
       footer={
         <LoadingButton
-          text="Save"
-          loadingText="Saving..."
+          text={t('save')}
+          loadingText={`${t('saving')}...`}
           processing={isPending}
           color="primary"
           onClick={handleSubmit(save)}
         />
       }
-    />
+    >
+      <Password form={form} />
+    </Modal>
   )
 }
 
-const UpdateProfilePicturedModal = (props: ModalComponentProps) => {
+const UpdateProfilePicturedModal = (props: ModalProps) => {
+  const { t } = useTranslation()
+  const { onClose, visible } = props
   const imgRef = useRef<HTMLImageElement>(null)
   const [imgPreview, setImgPreview] = useState('')
   const form = useForm<UploadFileInput>({
@@ -67,13 +80,13 @@ const UpdateProfilePicturedModal = (props: ModalComponentProps) => {
     method: 'POST',
     success: (data) => {
       localStorage.setItem(`${import.meta.env.VITE_APP_NAME}_auth_state`, JSON.stringify(data.user))
-      props.onClose()
+      onClose && onClose()
     },
   })
   const { data, isFetching } = useAppQuery<User>({
     url: '/profile',
     method: 'GET',
-    enabled: props.visible,
+    enabled: visible,
     queryKey: ['profile', 'picture'],
   })
 
@@ -88,7 +101,7 @@ const UpdateProfilePicturedModal = (props: ModalComponentProps) => {
     await mutateAsync(payload)
   }
 
-  const body = () => {
+  const Content = () => {
     if (!data || isFetching) return <LoadingContent />
 
     return (
@@ -123,22 +136,25 @@ const UpdateProfilePicturedModal = (props: ModalComponentProps) => {
   return (
     <Modal
       {...props}
-      title="Upload Profile Picture"
-      body={body()}
+      title={t('upload_profile_picture')}
       footer={
         <LoadingButton
           color="primary"
           onClick={handleSubmit(save)}
           processing={isPending}
-          text="Save"
-          loadingText="Saving..."
+          text={t('save')}
+          loadingText={`${t('saving')}...`}
         />
       }
-    />
+    >
+      <Content />
+    </Modal>
   )
 }
 
-const UpdateProfileModal = (props: ModalComponentProps) => {
+const UpdateProfileModal = (props: ModalProps) => {
+  const { t } = useTranslation()
+  const { onClose, visible } = props
   const form = useForm<UserInput>({
     resolver: zodResolver(UserSchema),
   })
@@ -148,7 +164,7 @@ const UpdateProfileModal = (props: ModalComponentProps) => {
     method: 'PATCH',
     success: (data) => {
       localStorage.setItem(`${import.meta.env.VITE_APP_NAME}_auth_state`, JSON.stringify(data.user))
-      props.onClose()
+      onClose && onClose()
     },
   })
 
@@ -159,18 +175,19 @@ const UpdateProfileModal = (props: ModalComponentProps) => {
   return (
     <Modal
       {...props}
-      title="Update Profile"
-      body={<ProfileForm enabled={props.visible} form={form}></ProfileForm>}
+      title={t('update_profile')}
       footer={
         <LoadingButton
-          text="Save"
-          loadingText="Saving..."
+          text={t('save')}
+          loadingText={`${t('saving')}...`}
           color="primary"
           processing={isPending}
           onClick={handleSubmit(save)}
         />
       }
-    />
+    >
+      <ProfileForm enabled={visible} form={form}></ProfileForm>
+    </Modal>
   )
 }
 
@@ -186,6 +203,7 @@ const GetGender = (genderCode?: Gender) => {
 }
 
 const Profile = () => {
+  const { t } = useTranslation()
   const { data, refetch, isFetching } = useAppQuery<User>({
     url: `/profile`,
     queryKey: ['profile'],
@@ -206,21 +224,21 @@ const Profile = () => {
           </div>
           <div className="text-center py-3">
             <CButton color="primary" onClick={() => setUpdateProfilePictureModal(true)}>
-              Edit Picture
+              {t('edit_picture')}
             </CButton>
           </div>
         </CCol>
         <CCol lg={9}>
           <CRow lg={{ gutter: 3 }}>
-            <CCol sm={3}>Name:</CCol>
+            <CCol sm={3}>{t('name')}:</CCol>
             <CCol sm={9}>{data?.name}</CCol>
-            <CCol sm={3}>Gender:</CCol>
+            <CCol sm={3}>{t('gender')}:</CCol>
             <CCol sm={9}>{GetGender(data?.gender)}</CCol>
-            <CCol sm={3}>Email:</CCol>
+            <CCol sm={3}>{t('email_address')}:</CCol>
             <CCol sm={9}>{data?.email}</CCol>
-            <CCol sm={3}>Phone Number:</CCol>
+            <CCol sm={3}>{t('phone_number')}:</CCol>
             <CCol sm={9}>{data?.phone_number.number}</CCol>
-            <CCol sm={3}>Address:</CCol>
+            <CCol sm={3}>{t('address', { num: '' })}:</CCol>
             <CCol sm={9}>
               {data?.address.line_1}, <br /> {data?.address.line_2}, <br />
               {data?.address.line_3}, <br />
@@ -239,10 +257,10 @@ const Profile = () => {
         <CCardBody>
           <div className="d-grid gap-2 d-md-flex justify-content-md-end pb-3">
             <CButton color="primary" onClick={() => setUpdatePasswordModal(true)}>
-              Change Password
+              {t('change_password')}
             </CButton>
             <CButton color="primary" onClick={() => setUpdateProfileModalVisible(true)}>
-              Update Profile
+              {t('update_profile')}
             </CButton>
           </div>
           {ProfileData}

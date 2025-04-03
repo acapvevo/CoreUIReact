@@ -5,6 +5,7 @@ import { CFormCheck, CFormFloating, CFormInput, CFormLabel } from '@coreui/react
 import { useEffect } from 'react'
 import { Permission } from '@/types/models/permission'
 import { Form } from '@/types/form'
+import { useTranslation } from 'react-i18next'
 
 const RoleForm = ({
   id,
@@ -18,6 +19,7 @@ const RoleForm = ({
     formState: { errors },
   },
 }: {} & Form<RoleInput>) => {
+  const {t} = useTranslation()
   const { data: permissions } = useAppSuspenseQuery<Permission[]>({
     queryKey: ['permissions', 'form'],
     url: '/setting/permission',
@@ -98,7 +100,7 @@ const RoleForm = ({
     <>
       <div className="mb-3">
         <CFormLabel htmlFor="name_role">
-          <strong>Name:</strong>
+          <strong>{t('name')}:</strong>
         </CFormLabel>
         <CFormInput
           type="text"
@@ -111,7 +113,7 @@ const RoleForm = ({
       </div>
       <div className="mb-3">
         <CFormLabel htmlFor="permissions">
-          <strong>Permissions</strong>
+          <strong>{t('permissions')}</strong>
         </CFormLabel>
         <div id="permissions">
           {permissions

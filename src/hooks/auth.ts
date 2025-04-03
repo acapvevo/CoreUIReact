@@ -14,6 +14,31 @@ const useAuth = (redirectIfAuthenticated?: string) => {
   const navigate = useNavigate()
   const { setUser } = usePermission()
 
+  const login = (data: UserToken) => {
+    const isSign = signIn({
+      auth: {
+        token: data['access_token'],
+        type: data['token_type'],
+      },
+      refresh: data['refresh_token'],
+      userState: data['user'],
+    })
+
+    if (isSign) {
+      setUser({
+        id: data.user.id,
+        roles: data.roles,
+        permissions: data.permissions,
+      })
+      navigate(redirectIfAuthenticated ?? '/', { replace: true })
+    } else {
+      sweetAlert({
+        type: 'error',
+        text: 'Something went wrong, Please try again',
+      })
+    }
+  }
+
   const loginWithPost = async (payload: LoginInput) => {
     try {
       const { data } = await axios.post<UserToken>('/login', payload)
@@ -27,41 +52,9 @@ const useAuth = (redirectIfAuthenticated?: string) => {
         userState: data['user'],
       })
 
-      if (isSign) {
-        setUser({
-          id: data.user.id,
-          roles: data.roles,
-          permissions: data.permissions,
-        })
-        navigate(redirectIfAuthenticated ?? '/', { replace: true })
-      } else {
-        sweetAlert({
-          type: 'error',
-          text: 'Something went wrong, Please try again',
-        })
-      }
+      login(data)
     } catch (error: any) {
       sweetAlert(getError(error))
-    }
-  }
-
-  const login = (data: UserToken) => {
-    const isSign = signIn({
-      auth: {
-        token: data['access_token'],
-        type: data['token_type'],
-      },
-      refresh: data['refresh_token'],
-      userState: data['user'],
-    })
-
-    if (isSign) {
-      navigate(redirectIfAuthenticated ?? '/', { replace: true })
-    } else {
-      sweetAlert({
-        type: 'error',
-        text: 'Something went wrong, Please try again',
-      })
     }
   }
 
@@ -74,7 +67,7 @@ const useAuth = (redirectIfAuthenticated?: string) => {
       })
       signOut()
 
-      navigate('/Auth/Login', { replace: true })
+      navigate('/Login', { replace: true })
     } catch (error: any) {
       sweetAlert(getError(error))
     }

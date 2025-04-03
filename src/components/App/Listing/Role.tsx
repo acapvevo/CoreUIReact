@@ -1,90 +1,65 @@
 import { useAppQuery } from '@/libs/react-query'
 import { Role } from '@/types/models/role'
-import { SortingState } from '@tanstack/react-table'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import Action from '../Button/Action'
 import LoadingContent from '../Loading/Content'
 import sweetAlert from '@/libs/sweet-alert2'
 import useRequest from '@/hooks/request'
 import { RoleListingProps } from '@/types/listings/role'
 import Table from '../Table'
-import { Columns } from '@/types/components/table'
-import { generateColumnDefObject } from '@/utils/table'
+import { Columns, Paginate } from '@/types/components/table'
+import { generateColumnDefObject, generateStatusColumnDef } from '@/utils/table'
 import { formatForDateTimeLocalInput } from '@/libs/luxon'
 import SearchBuilder from '@/components/App/SearchBuilder'
-import { formatQuery, RuleGroupType } from 'react-querybuilder'
+import { useTranslation } from 'react-i18next'
+import useTable from '@/hooks/table'
+import { ActionContextMenuButton, ActionGroupButton } from '@/components/App/Button'
 
 const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProps) => {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [query, setQuery] = useState<RuleGroupType>({ combinator: 'and', rules: [] })
-  const { data, refetch, isFetching } = useAppQuery<Role[]>({
-    url: `/setting/role?query=${formatQuery(query, 'json_without_ids')}&sort=${encodeURIComponent(JSON.stringify(sorting))}`,
+  const { t } = useTranslation()
+  const {
+    paginationState: [pagination, setPagination],
+    sortingState: [sorting, setSorting],
+    queryState: [query, setQuery],
+    params,
+  } = useTable()
+  const { data, refetch, isFetching } = useAppQuery<Paginate<Role>>({
+    url: `/setting/role?${params.toString()}`,
     method: 'GET',
-    queryKey: ['role', 'list', 'setting'],
+    queryKey: ['role', 'list'],
   })
   const { deleteAsync } = useRequest('/setting/role')
   const fields: Columns<Role> = [
     {
-      label: 'Role',
+      label: t('role'),
       name: 'name',
-      ...generateColumnDefObject<Role>('Role', 'name'),
+      ...generateColumnDefObject<Role>(t('role'), 'name'),
+      includeInQuery: true,
+      includeInTable: true,
     },
     {
+      label: t('created_at'),
       name: 'created_at',
-      label: 'Created At',
       inputType: 'datetime-local',
       defaultValue: formatForDateTimeLocalInput(new Date()),
-      ...generateColumnDefObject<Role>('Created At', 'created_at'),
+      ...generateColumnDefObject<Role>(t('created_at'), 'created_at'),
+      includeInQuery: true,
+      includeInTable: true,
     },
     {
-      header: 'Action',
-      enableHiding: false,
-      enableSorting: false,
-      cell: (cell) => {
-        return (
-          <Action
-            onClickView={() => {
-              setViewing(true)
-              setID(cell.row.original.id)
-              setVisible(true)
-            }}
-            onClickEdit={() => {
-              setViewing(false)
-              setID(cell.row.original.id)
-              setVisible(true)
-            }}
-            onClickDelete={() => {
-              sweetAlert({
-                title: 'Delete Role',
-                text: 'Are you sure you want to delete this role?',
-                type: 'question',
-                showCancelButton: true,
-                cancelButtonText: 'No',
-                confirmButtonText: 'Yes',
-              }).then(async (result) => {
-                if (result.isConfirmed) {
-                  const isSuccess = await deleteAsync(cell.row.original.id)
-
-                  if (isSuccess) refetch()
-                }
-              })
-            }}
-          ></Action>
-        )
-      },
-      meta: {
-        getCellContext: () => {
-          return {
-            style: { width: '5%' },
-          }
-        },
-      },
+      label: t('in_used'),
+      name: 'in_used',
+      ...generateColumnDefObject<Role>(t('in_used'), 'in_used'),
+      cell: ({ getValue }) => (getValue() ? 'Yes' : 'No'),
+      includeInQuery: false,
+      includeInTable: true,
     },
+    generateStatusColumnDef(),
   ]
 
   useEffect(() => {
     refetch()
-  }, [counter, query,sorting])
+  }, [counter, query, sorting])
 
   return (
     <>
@@ -92,17 +67,75 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
         <SearchBuilder
           query={query}
           setQuery={setQuery}
-          fields={fields.filter((field) => field.header !== 'Action')}
+          fields={fields.filter((field) => field.includeInQuery)}
         />
       </div>
       {isFetching ? (
         <LoadingContent />
       ) : (
         <Table
-          data={data!.filter((role) => !role.deleted_at)}
-          columnDef={fields}
+          data={data}
+          columnDef={fields.filter((field) => field.includeInTable)}
           sorting={sorting}
           setSorting={setSorting}
+          setPagination={setPagination}
+          pagination={pagination}
+          RowsContextMenu={({
+            row: {
+              original: { id, deleted_at },
+            },
+          }) => {
+            return (
+              <>
+                <ActionContextMenuButton
+                  viewDropdownItemProps={{
+                    onClick: () => {
+                      setViewing(true)
+                      setID(id)
+                      setVisible(true)
+                    },
+                  }}
+                  editDropdownItemProps={{
+                    onClick: () => {
+                      setViewing(false)
+                      setID(id)
+                      setVisible(true)
+                    },
+                  }}
+                  deleteDropdownItemProps={{
+                    className: !!deleted_at ? 'd-none' : '',
+                    onClick: () => {
+                      sweetAlert({
+                        title: t('delete_role'),
+                        text: t('are_you_sure_you_want_to_delete_this_role?'),
+                        type: 'question',
+                        showCancelButton: true,
+                        cancelButtonText: t('no'),
+                        confirmButtonText: t('yes'),
+                      }).then(async (result) => {
+                        if (result.isConfirmed && (await deleteAsync(id))) refetch()
+                      })
+                    },
+                  }}
+                  restoreDropdownItemProps={{
+                    className: !!deleted_at ? '' : 'd-none',
+                    onClick: () => {
+                      sweetAlert({
+                        title: t('restore_role'),
+                        text: t('are_you_sure_you_want_to_restore_this_role?'),
+                        type: 'question',
+                        showCancelButton: true,
+                        cancelButtonText: t('no'),
+                        confirmButtonText: t('yes'),
+                      }).then(async (result) => {
+                        if (result.isConfirmed && (await deleteAsync(id))) refetch()
+                      })
+                    },
+                  }}
+                />
+              </>
+            )
+          }}
         />
       )}
     </>

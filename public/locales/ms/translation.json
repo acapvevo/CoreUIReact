@@ -1,0 +1,180 @@
+{
+    "login": "Log masuk",
+    "sign_in_to_your_account": "Log Masuk ke akaun anda",
+    "username": "Nama pengguna",
+    "password": "Kata laluan",
+    "remember_me": "Ingat Saya",
+    "forgot_your_password?": "Terlupa kata laluan anda?",
+    "no_account?": "Tiada Akaun?",
+    "sign_up_here": "Daftar Di Sini",
+    "registration": "Pendaftaran",
+    "create_your_account": "Buat akaun anda",
+    "please_select_your_gender": "Sila Pilih Jantina Anda",
+    "name": "Nama",
+    "email_address": "Alamat E-mel",
+    "repeat_password": "Sahkan kata laluan",
+    "register": "Daftar",
+    "registering": "Mendaftar",
+    "have_an_account?": "Ada akaun?",
+    "login_here": "Log Masuk Di Sini",
+    "male": "jantan",
+    "female": "perempuan",
+    "enter_your_new_password": "Masukkan Kata Laluan baharu anda",
+    "password_confirmation": "Pengesahan Kata Laluan",
+    "enter_your_new_password_again": "Masukkan Kata Laluan baharu anda sekali lagi",
+    "gender": "Jantina",
+    "phone_number": "Nombor Telefon",
+    "address": "Alamat {{num}}",
+    "postcode": "Poskod",
+    "city": "Bandar",
+    "state": "negeri",
+    "country": "Negara",
+    "permissions": "kebenaran",
+    "roles": "Peranan",
+    "role": "Peranan",
+    "in_used": "Dalam Digunakan",
+    "created_at": "Dicipta Pada",
+    "action": "Tindakan",
+    "delete_role": "Padam Peranan",
+    "are_you_sure_you_want_to_delete_this_role?": "Adakah anda pasti mahu memadamkan peranan ini?",
+    "restore_role": "Pulihkan Peranan",
+    "are_you_sure_you_want_to_restore_this_role?": "Adakah anda pasti mahu memulihkan Peranan ini?",
+    "role_in_used": "Peranan dalam Digunakan",
+    "this_role_currently_in_used": "Peranan ini sedang digunakan",
+    "no": "Tidak",
+    "yes": "ya",
+    "delete_user": "Padam Pengguna",
+    "loading": "Memuatkan",
+    "thank_you_for_waiting": "Terima kasih kerana menunggu",
+    "executing_your_request": "Melaksanakan Permintaan anda",
+    "light": "Cahaya",
+    "dark": "Gelap",
+    "auto": "Auto",
+    "profile": "Profil",
+    "system": "Sistem",
+    "log_out": "Log Keluar",
+    "home": "Halaman Utama",
+    "dashboard": "Papan pemuka",
+    "setting": "Tetapan",
+    "authentication": "Pengesahan",
+    "restore_User": "Padam Pengguna",
+    "are_you_sure_you_want_to_delete_this_user?": "Adakah anda pasti mahu memadamkan pengguna ini?",
+    "restore_user": "Pulihkan Pengguna",
+    "are_you_sure_you_want_to_restore_this_user?": "Adakah anda pasti mahu memulihkan pengguna ini?",
+    "zod": {
+      "errors": {
+        "invalid_type": "Dijangka {{expected}}, diterima {{received}}",
+        "invalid_type_received_undefined": "Diperlukan",
+        "invalid_type_received_null": "Diperlukan",
+        "invalid_literal": "Nilai literal tidak sah, dijangka {{expected}}",
+        "unrecognized_keys": "Kunci tidak dikenali dalam objek: {{- keys}}",
+        "invalid_union": "Input tidak sah",
+        "invalid_union_discriminator": "Nilai diskriminasi tidak sah.  {{- options}}",
+        "invalid_enum_value": "Nilai enum tidak sah.  {{- options}}, terima '{{received}}'",
+        "invalid_arguments": "Argumen fungsi tidak sah",
+        "invalid_return_type": "Jenis pemulangan fungsi tidak sah",
+        "invalid_date": "Tarikh tidak sah",
+        "invalid_phone_number": "Nombor telefon tidak sah",
+        "password_not_match": "Kata laluan tidak sepadan",
+        "recaptcha_incomplete": "Sila lengkapkan tangkapan semula",
+        "custom": "Input tidak sah",
+        "invalid_intersection_types": "Keputusan persimpangan tidak dapat digabungkan",
+        "not_multiple_of": "Nombor mestilah gandaan daripada {{multipleOf}}",
+        "not_finite": "Nombor mestilah terhingga",
+        "invalid_string": {
+          "email": "Tidak sah {{validation}}",
+          "url": "Tidak sah {{validation}}",
+          "uuid": "Tidak sah {{validation}}",
+          "cuid": "Tidak sah {{validation}}",
+          "regex": "Tidak sah",
+          "datetime": "Tidak sah {{validation}}",
+          "startsWith": "Input tidak sah: mesti bermula dengan \"{{startsWith}}\"",
+          "endsWith": "Input tidak sah: mesti berakhir dengan \"{{endsWith}}\""
+        },
+        "too_small": {
+          "array": {
+            "exact": "Array mesti mengandungi tepat {{minimum}} elemen",
+            "inclusive": "Array mesti mengandungi sekurang-kurangnya {{minimum}} elemen",
+            "not_inclusive": "Tatasusunan mesti mengandungi lebih daripada {{minimum}} elemen"
+          },
+          "string": {
+            "exact": "Rentetan mesti mengandungi tepat {{minimum}} watak",
+            "inclusive": "Rentetan mesti mengandungi sekurang-kurangnya {{minimum}} watak",
+            "not_inclusive": "Rentetan mesti mengandungi lebih {{minimum}} watak"
+          },
+          "number": {
+            "exact": "Nombor mestilah tepat {{minimum}}",
+            "inclusive": "Nombor mestilah lebih besar daripada atau sama dengan {{minimum}}",
+            "not_inclusive": "Nombor mestilah lebih besar daripada {{minimum}}"
+          },
+          "set": {
+            "exact": "Input tidak sah",
+            "inclusive": "Input tidak sah",
+            "not_inclusive": "Input tidak sah"
+          },
+          "date": {
+            "exact": "Tarikh mestilah tepat {{- minimum, datetime}}",
+            "inclusive": "Tarikh mestilah lebih besar daripada atau sama dengan {{- minimum, datetime}}",
+            "not_inclusive": "Tarikh mestilah lebih besar daripada {{- minimum, datetime}}"
+          }
+        },
+        "too_big": {
+          "array": {
+            "exact": "Array mesti mengandungi tepat {{maximum}} elemen",
+            "inclusive": "Tatasusunan mesti mengandungi paling banyak {{maximum}} elemen",
+            "not_inclusive": "Tatasusunan mesti mengandungi kurang daripada {{maximum}} elemen"
+          },
+          "string": {
+            "exact": "Rentetan mesti mengandungi tepat {{maximum}} watak",
+            "inclusive": "Rentetan mesti mengandungi paling banyak {{maximum}} watak",
+            "not_inclusive": "Rentetan mesti mengandungi di bawah {{maximum}} watak"
+          },
+          "number": {
+            "exact": "Nombor mestilah tepat {{maximum}}",
+            "inclusive": "Nombor mestilah kurang daripada atau sama dengan {{maximum}}",
+            "not_inclusive": "Bilangan mestilah kurang daripada {{maximum}}"
+          },
+          "set": {
+            "exact": "Input tidak sah",
+            "inclusive": "Input tidak sah",
+            "not_inclusive": "Input tidak sah"
+          },
+          "date": {
+            "exact": "Tarikh mestilah tepat {{- maximum, datetime}}",
+            "inclusive": "Tarikh mestilah lebih kecil daripada atau sama dengan {{- maximum, datetime}}",
+            "not_inclusive": "Tarikh mestilah lebih kecil daripada {{- maximum, datetime}}"
+          }
+        }
+      },
+      "validations": {
+        "email": "email",
+        "url": "url",
+        "uuid": "uuid",
+        "cuid": "cuid",
+        "regex": "regex",
+        "datetime": "datetime"
+      },
+      "types": {
+        "function": "function",
+        "number": "number",
+        "string": "string",
+        "nan": "nan",
+        "integer": "integer",
+        "float": "float",
+        "boolean": "boolean",
+        "date": "date",
+        "bigint": "bigint",
+        "undefined": "undefined",
+        "symbol": "symbol",
+        "null": "null",
+        "array": "array",
+        "object": "object",
+        "unknown": "unknown",
+        "promise": "promise",
+        "void": "void",
+        "never": "never",
+        "map": "map",
+        "set": "set"
+      }
+    }
+  }

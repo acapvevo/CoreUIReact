@@ -1,5 +1,6 @@
 import { CButton, CSpinner } from '@coreui/react'
 import { CButtonProps } from '@coreui/react/dist/esm/components/button/CButton'
+import { useTranslation } from 'react-i18next'
 
 interface LoadingButtonProps extends CButtonProps {
   processing: boolean
@@ -8,6 +9,7 @@ interface LoadingButtonProps extends CButtonProps {
 }
 
 const LoadingButton = (props: LoadingButtonProps) => {
+  const {t} = useTranslation()
   const { processing, text, loadingText, ...rest } = props
 
   return (
@@ -15,7 +17,7 @@ const LoadingButton = (props: LoadingButtonProps) => {
       {processing ? (
         <>
           <CSpinner as="span" size="sm" aria-hidden="true" />
-          {loadingText && ' Loading...'}
+          {loadingText && ` ${t('loading')}...`}
         </>
       ) : (
         text

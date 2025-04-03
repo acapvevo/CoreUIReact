@@ -5,9 +5,11 @@ import { CBreadcrumb, CBreadcrumbItem } from '@coreui/react'
 import { RouteObj } from '@/types/route'
 import { routes } from '@/utils/route'
 import { app_routes } from '@/routes'
+import { useTranslation } from 'react-i18next'
 
-const AppBreadcrumb = () => {
+const Breadcrumb = () => {
   const currentLocation = useLocation().pathname
+  const { t } = useTranslation()
 
   const getRouteName = (pathname: string, routes: RouteObj[]) => {
     const currentRoute = routes.find((route) => route.path === pathname)
@@ -19,12 +21,14 @@ const AppBreadcrumb = () => {
     location.split('/').reduce((prev, curr, index, array) => {
       const currentPathname = `${prev}/${curr}`
       const routeName = getRouteName(currentPathname, routes(app_routes))
+
       routeName &&
         breadcrumbs.push({
           pathname: currentPathname,
-          name: routeName,
-          active: index + 1 === array.length ? true : false,
+          name: t(routeName),
+          active: index + 1 === array.length,
         })
+
       return currentPathname
     })
     return breadcrumbs
@@ -49,4 +53,4 @@ const AppBreadcrumb = () => {
   )
 }
 
-export default memo(AppBreadcrumb)
+export default memo(Breadcrumb)

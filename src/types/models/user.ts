@@ -1,6 +1,7 @@
+import { z } from '@/libs/zod'
 import { Model } from '../model'
-import { z } from 'zod'
 import { PhoneNumberUtil } from 'google-libphonenumber'
+import { CountryIso2 } from 'react-international-phone'
 
 export enum Gender {
   MALE = 'M',
@@ -12,7 +13,7 @@ export interface User extends Model, UserInput {
   timezone: string
   last_login: string
   email_verified_at: string | null
-  address: Address
+  role_names: string[]
 }
 
 export type LoginInput = z.infer<typeof LoginScheme>
@@ -21,7 +22,6 @@ export const LoginScheme = z
     username: z.string().min(1),
     password: z.string().min(1),
     remember_me: z.boolean(),
-    timezone: z.string().min(1),
   })
   .required()
 
@@ -55,18 +55,21 @@ export const AddressScheme = z
 export type PhoneNumberInput = z.infer<typeof PhoneNumberSchema>
 export const PhoneNumberSchema = z
   .object({
-    iso2: z.string().nullable(),
+    iso2: z.custom<CountryIso2>().nullable(),
     number: z
       .string()
       .nullable()
-      .refine((val) => {
-        const phoneUtil = PhoneNumberUtil.getInstance()
-        try {
-          return phoneUtil.isValidNumber(phoneUtil.parseAndKeepRawInput(val ?? ''))
-        } catch (error) {
-          return false
-        }
-      }),
+      .refine(
+        (val) => {
+          const phoneUtil = PhoneNumberUtil.getInstance()
+          try {
+            return phoneUtil.isValidNumber(phoneUtil.parseAndKeepRawInput(val ?? ''))
+          } catch (error) {
+            return false
+          }
+        },
+        { params: { i18n: 'invalid_phone_number' } },
+      ),
   })
   .required()
 
@@ -81,15 +84,12 @@ export const UserSchema = z
 export type PasswordInput = z.infer<typeof PasswordScheme>
 export const PasswordScheme = z
   .object({
-    password: z.string().min(8).regex(new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$'), {
-      message:
-        'Password must be at least 8 characters and contain an uppercase letter, lowercase letter, and number',
-    }),
+    password: z.string().min(8).regex(new RegExp('^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$')),
     password_confirmation: z.string(),
   })
   .required()
   .refine((data) => data.password === data.password_confirmation, {
-    message: 'Passwords do not match',
+    params: { i18n: 'password_not_match' },
     path: ['password_confirmation'],
   })
 
@@ -107,3 +107,10 @@ export type RolesInput = z.infer<typeof RolesScheme>
 export const RolesScheme = z.object({
   roles: z.array(z.string()).min(1),
 })
+
+export type ResetPasswordInput = z.infer<typeof ResetPasswordScheme>
+export const ResetPasswordScheme = PasswordScheme.and(
+  z.object({
+    token: z.string().min(1),
+  }),
+).and(UserSchema.pick({ email: true }))

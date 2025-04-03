@@ -9,7 +9,7 @@ const refresh = createRefresh<User>({
     try {
       const response = await axios.post('/refresh', {
         refresh_token: param.refreshToken,
-        access_token: param.authToken
+        access_token: param.authToken,
       })
       return {
         isSuccess: true,
@@ -31,6 +31,8 @@ const store = createStore<User>({
   authName: import.meta.env.VITE_APP_NAME + '_auth',
   authType: 'localstorage',
   refresh: refresh,
+  // cookieDomain: 'http://localhost:5173',
+  // cookieSecure: false,
   debug: import.meta.env.VITE_APP_DEBUG,
 })
 

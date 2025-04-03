@@ -2,31 +2,35 @@ import { ReactNode, Suspense, useEffect } from 'react'
 import {
   BrowserRouter,
   createBrowserRouter,
-  createRoutesFromElements,
+  createRoutesFromElements, Route,
   RouterProvider,
   Routes,
 } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
 import AuthProvider from 'react-auth-kit'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import './scss/style.scss'
+import './bootstrap'
 
 import store from './store/provider'
-import { State } from './types/store'
 import LoadingContent from './components/App/Loading/Content'
 import useTheme from './hooks/theme'
 import { AppRoutes, GuestRoutes, TemplateRoutes } from './routes'
 import queryString from 'query-string'
 import { PermissionProvider } from 'react-permission-role'
+import { useTranslation } from 'react-i18next'
+import ErrorPage from '@/views/Error'
 
 const App = () => {
   const { isColorModeSet, setColorMode, colorMode } = useTheme()
+  const { i18n } = useTranslation()
 
   useEffect(() => {
     const theme = queryString.parse(location.search)['theme'] ?? colorMode ?? 'light'
+    const lang = queryString.parse(location.search)['lang'] ?? 'en'
 
+    i18n.changeLanguage(lang as string)
     if (isColorModeSet()) {
       return
     }
@@ -35,11 +39,11 @@ const App = () => {
   }, [])
 
   const routes = (
-    <>
+    <Route errorElement={<ErrorPage/>}>
       {TemplateRoutes}
       {AppRoutes}
       {GuestRoutes}
-    </>
+    </Route>
   )
   const client = new QueryClient()
   const Provider = ({ children }: { children: ReactNode }) => {
@@ -57,25 +61,21 @@ const App = () => {
     return (
       <Provider>
         <BrowserRouter>
-          <Suspense fallback={<LoadingContent />}>
-            <Routes>{routes}</Routes>
-          </Suspense>
+          <Routes>{routes}</Routes>
         </BrowserRouter>
       </Provider>
     )
   }
 
-  const router = createBrowserRouter(createRoutesFromElements(routes))
-
-  const NewApp = () => {
+  const App = () => {
     return (
       <Provider>
-        <RouterProvider router={router} fallbackElement={<LoadingContent />} />
+        <RouterProvider router={createBrowserRouter(createRoutesFromElements(routes))} fallbackElement={<LoadingContent />} />
       </Provider>
     )
   }
 
-  return <NewApp />
+  return <App />
 }
 
 export default App

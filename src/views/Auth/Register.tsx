@@ -26,8 +26,10 @@ import { Icon } from '@iconify/react'
 import LoadingButton from '@/components/App/Loading/Button'
 import { zodResolver } from '@hookform/resolvers/zod'
 import useAuth from '@/hooks/auth'
+import { useTranslation } from 'react-i18next'
 
 const Register = () => {
+  const { t } = useTranslation()
   const { login } = useAuth()
   const {
     setValue,
@@ -63,8 +65,8 @@ const Register = () => {
         <CCard className="mx-4">
           <CCardBody className="p-4">
             <CForm onSubmit={handleSubmit(save)}>
-              <h1>Registration</h1>
-              <p className="text-body-secondary">Create your account</p>
+              <h1>{t('registration')}</h1>
+              <p className="text-body-secondary">{t('create_your_account')}</p>
               <CRow lg={{ gutter: 2 }}>
                 <CInputGroup className="col-lg-6">
                   <CInputGroupText>
@@ -72,7 +74,7 @@ const Register = () => {
                   </CInputGroupText>
                   <CFormInput
                     type="text"
-                    placeholder="Name"
+                    placeholder={t('name')}
                     autoComplete="name"
                     {...register('name')}
                     invalid={!!errors.name}
@@ -87,15 +89,15 @@ const Register = () => {
                     id="gender"
                     options={[
                       {
-                        label: 'Please Select Your Gender',
+                        label: t('please_select_your_gender'),
                         value: '',
                       },
                       {
-                        label: 'Male',
+                        label: t('male'),
                         value: Gender.MALE,
                       },
                       {
-                        label: 'Female',
+                        label: t('female'),
                         value: Gender.FEMALE,
                       },
                     ]}
@@ -110,7 +112,7 @@ const Register = () => {
                   </CInputGroupText>
                   <CFormInput
                     type="email"
-                    placeholder="Email Address"
+                    placeholder={t('email_address')}
                     autoComplete="email"
                     {...register('email')}
                     invalid={!!errors.email}
@@ -123,7 +125,7 @@ const Register = () => {
                   </CInputGroupText>
                   <CFormInput
                     type="text"
-                    placeholder="Username"
+                    placeholder={t('username')}
                     autoComplete="username"
                     {...register('username')}
                     invalid={!!errors.username}
@@ -136,7 +138,7 @@ const Register = () => {
                   </CInputGroupText>
                   <CFormInput
                     type="password"
-                    placeholder="Password"
+                    placeholder={t('password')}
                     autoComplete="new-password"
                     {...register('password')}
                     invalid={!!errors.password}
@@ -149,7 +151,7 @@ const Register = () => {
                   </CInputGroupText>
                   <CFormInput
                     type="password"
-                    placeholder="Repeat password"
+                    placeholder={t('repeat_password')}
                     autoComplete="new-password"
                     {...register('password_confirmation')}
                     invalid={!!errors.password_confirmation}
@@ -162,22 +164,23 @@ const Register = () => {
                   className="d-flex justify-content-center"
                   sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
                   onChange={(token) => setValue('isCaptcha', !!token)}
+                  onExpired={() => setValue('isCaptcha', false)}
                 />
                 <p className="invalid-feedback d-block text-center">{errors.isCaptcha?.message}</p>
               </div>
               <div className="d-grid">
                 <LoadingButton
                   type="submit"
-                  text="Register"
-                  loadingText="Registering..."
+                  text={t('register')}
+                  loadingText={`${t('registering')}...`}
                   processing={isPending}
                   color="success"
                 />
               </div>
             </CForm>
           </CCardBody>
-          <CCardFooter className='d-flex justify-content-center'>
-            Have an account?&nbsp;<a href='/Auth/Login'>Login Here</a>
+          <CCardFooter className="d-flex justify-content-center">
+            {t('have_an_account?')}&nbsp;<a href="/Login">{t('login_here')}</a>
           </CCardFooter>
         </CCard>
       </CCol>

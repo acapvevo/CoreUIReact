@@ -1,12 +1,14 @@
-import { Dispatch, ReactNode, SetStateAction } from 'react'
+import { Dispatch, PropsWithChildren, ReactNode, SetStateAction } from 'react'
+import { CModalProps } from '@coreui/react/dist/cjs/components/modal/CModal'
 
-export interface ModalProps extends ModalComponentProps {
-  title?: string
-  body?: ReactNode
-  footer?: ReactNode
-}
+// export interface ModalProps extends CModalProps {
+//   title?: string
+//   footer?: ReactNode
+// }
 
-export interface ModalComponentProps {
-  visible: boolean
-  onClose: () => void
-}
+export type ModalProps = PropsWithChildren<
+  {
+    title?: string
+    footer?: ReactNode
+  } & CModalProps
+>

@@ -16,6 +16,13 @@ export const getError: GetError = (error) => {
   if (error.response) {
     // The request was made and the server responded with a status code
     // that falls out of the range of 2xx
+    if(error.response.status == 400){
+      return {
+        type: error.response.data.type,
+        text: error.response.data.text,
+      }
+    }
+
     return {
       type: 'error',
       text: error.response.data.message,

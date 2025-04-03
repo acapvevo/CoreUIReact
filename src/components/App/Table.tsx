@@ -24,6 +24,7 @@ import {
   getPaginationRowModel,
   flexRender,
   PaginationState,
+  Row,
 } from '@tanstack/react-table'
 import { range } from 'lodash'
 import { CSSProperties, ReactNode, useState } from 'react'
@@ -50,30 +51,28 @@ import {
   DragAlongCellType,
   DraggableHeaderType,
   TableContentType,
-  TableContextMenuType,
+  TableHeaderContextMenuType,
   TableProps,
+  TableRowsContextMenuType,
 } from '@/types/components/table'
 import Icon from './Icon'
 
 const Table: <T>(props: TableProps<T>) => ReactNode = ({
   data: defaultData,
   columnDef: defaultColumns,
-  style,
-  captionTop,
   enableRowSelection,
   sorting,
   setSorting,
-  usePagination = true,
+  pagination,
+  setPagination,
+  ...props
 }) => {
-  const [data] = useState(() => [...defaultData])
+  const [data] = useState(() => [...(defaultData?.data ?? [])])
   const [columns] = useState<typeof defaultColumns>(() => [...defaultColumns])
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState({})
   const [columnOrder, setColumnOrder] = useState<string[]>(() => columns.map((c) => c.id!))
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+  const usePagination = !!pagination && !!setPagination
   const useSorting = !!sorting && !!setSorting
 
   const table = useReactTable({
@@ -90,6 +89,7 @@ const Table: <T>(props: TableProps<T>) => ReactNode = ({
     onSortingChange: setSorting,
     enableRowSelection,
     enableMultiRowSelection: false,
+    rowCount: defaultData?.total,
     manualPagination: !usePagination,
     manualSorting: useSorting,
     isMultiSortEvent: () => true,
@@ -160,13 +160,7 @@ const Table: <T>(props: TableProps<T>) => ReactNode = ({
         onDragEnd={handleDragEnd}
         sensors={sensors}
       >
-        <TableContent
-          table={table}
-          style={style}
-          columnOrder={columnOrder}
-          captionTop={captionTop}
-          useSorting={useSorting}
-        />
+        <TableContent table={table} columnOrder={columnOrder} useSorting={useSorting} {...props} />
       </DndContext>
       {usePagination && (
         <CRow>
@@ -228,7 +222,7 @@ const Table: <T>(props: TableProps<T>) => ReactNode = ({
   )
 }
 
-const TableContextMenu: TableContextMenuType = ({ table, ...rest }) => {
+const TableHeaderContextMenu: TableHeaderContextMenuType = ({ table, ...rest }) => {
   return (
     <ContextMenu {...rest}>
       <CDropdownItem
@@ -250,6 +244,10 @@ const TableContextMenu: TableContextMenuType = ({ table, ...rest }) => {
       })}
     </ContextMenu>
   )
+}
+
+const TableRowsContextMenu: TableRowsContextMenuType = ({ children, ...rest }) => {
+  return <ContextMenu {...rest}>{children}</ContextMenu>
 }
 
 const DraggableHeader: DraggableHeaderType = ({ header, useSorting }) => {
@@ -298,39 +296,48 @@ const DraggableHeader: DraggableHeaderType = ({ header, useSorting }) => {
   )
 }
 
-const DragAlongCell: DragAlongCellType = ({ cell }) => {
+const DragAlongCell: DragAlongCellType = ({ cell: { column, getContext } }) => {
   const { isDragging, setNodeRef, transform } = useSortable({
-    id: cell.column.id,
+    id: column.id,
   })
-  const meta = cell.column.columnDef.meta
+  const meta = column.columnDef.meta
 
   const style: CSSProperties = {
     opacity: isDragging ? 0.8 : 1,
     position: 'relative',
-    transform: CSS.Translate.toString({ ...transform!, y: 0 }), // translate instead of transform to avoid squishing
     transition: 'width transform 0.2s ease-in-out',
-    width: cell.column.getSize(),
+    width: column.getSize(),
     zIndex: isDragging ? 2 : 1,
-    ...(meta && meta.getCellContext && meta.getCellContext(cell.getContext()).style),
+    ...(meta && meta.getCellContext && meta.getCellContext(getContext()).style),
   }
 
   return (
     <CTableDataCell
-      {...(meta && meta.getCellContext && meta.getCellContext(cell.getContext()))}
+      {...(meta && meta.getCellContext && meta.getCellContext(getContext()))}
       style={style}
       ref={setNodeRef}
     >
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      {flexRender(column.columnDef.cell, getContext())}
     </CTableDataCell>
   )
 }
 
-const TableContent: TableContentType = ({ table, style, columnOrder, captionTop, useSorting }) => {
-  const [visible, setVisible] = useState(false)
+const TableContent: TableContentType = ({
+  table,
+  style,
+  columnOrder,
+  captionTop,
+  useSorting,
+  RowsContextMenu,
+  RowProps,
+}) => {
+  const [headerContextMenuVisible, setHeaderContextMenuVisible] = useState(false)
+  const [rowsContextMenuVisible, setRowsContextMenuVisible] = useState(false)
   const [position, setPosition] = useState({
     top: '0px',
     left: '0px',
   })
+  const [row, setRow] = useState<Row<any>>()
 
   return (
     <>
@@ -340,11 +347,12 @@ const TableContent: TableContentType = ({ table, style, columnOrder, captionTop,
             color="primary position-sticky top-0 z-1"
             onContextMenu={(e) => {
               e.preventDefault()
+
               setPosition({
                 top: `${e.pageY - 10}px`,
                 left: `${e.pageX - 40}px`,
               })
-              setVisible(true)
+              setHeaderContextMenuVisible(true)
             }}
           >
             {table.getHeaderGroups().map((headerGroup) => (
@@ -359,11 +367,27 @@ const TableContent: TableContentType = ({ table, style, columnOrder, captionTop,
           </CTableHead>
           <CTableBody>
             {table.getRowModel().rows.map((row) => {
+              const { onClick, onContextMenu, active, ...props } = RowProps ? RowProps(row) : {}
               return (
                 <CTableRow
                   key={row.id}
-                  onClick={row.getToggleSelectedHandler()}
-                  active={row.getIsSelected()}
+                  {...props}
+                  onClick={(e) => {
+                    row.getToggleSelectedHandler()(e)
+                    onClick && onClick(e)
+                  }}
+                  active={row.getIsSelected() && active}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+
+                    setPosition({
+                      top: `${e.pageY - 10}px`,
+                      left: `${e.pageX - 40}px`,
+                    })
+                    setRow(row)
+                    setRowsContextMenuVisible(true)
+                    onContextMenu && onContextMenu(e)
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => {
                     return (
@@ -401,12 +425,20 @@ const TableContent: TableContentType = ({ table, style, columnOrder, captionTop,
           )}
         </CTable>
       </div>
-      {visible && (
-        <TableContextMenu
+      {headerContextMenuVisible && (
+        <TableHeaderContextMenu
           table={table}
           style={{ top: position.top, left: position.left }}
-          setVisible={setVisible}
+          setVisible={setHeaderContextMenuVisible}
         />
+      )}
+      {RowsContextMenu && row && rowsContextMenuVisible && (
+        <TableRowsContextMenu
+          style={{ top: position.top, left: position.left }}
+          setVisible={setRowsContextMenuVisible}
+        >
+          <RowsContextMenu row={row} />
+        </TableRowsContextMenu>
       )}
     </>
   )

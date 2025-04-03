@@ -1,4 +1,4 @@
-import React from 'react'
+import { ReactNode } from 'react'
 import CIcon from '@coreui/icons-react'
 import {
   cilBell,
@@ -21,7 +21,7 @@ export interface Nav {
   component: typeof CNavItem | typeof CNavTitle | typeof CNavGroup
   name: string
   to?: string
-  icon?: React.ReactNode
+  icon?: ReactNode
   badge?: {
     color: string
     text: string
@@ -34,7 +34,7 @@ export interface Nav {
 export const app_nav: Nav[] = [
   {
     component: CNavItem,
-    name: 'Dashboard',
+    name: 'dashboard',
     to: '/',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
   },

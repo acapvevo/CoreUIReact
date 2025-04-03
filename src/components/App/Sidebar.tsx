@@ -26,8 +26,10 @@ import { sidebarAction } from '@/store/slices/sidebar'
 import { State } from '@/types/store'
 import { app_nav, Nav } from '@/nav'
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
-const AppSidebarNav = ({ items }: { items: Nav[] }) => {
+const SidebarNav = ({ items }: { items: Nav[] }) => {
+  const {t} = useTranslation()
   const navLink = (
     name: string,
     icon: ReactNode,
@@ -46,7 +48,7 @@ const AppSidebarNav = ({ items }: { items: Nav[] }) => {
                 <span className="nav-icon-bullet"></span>
               </span>
             )}
-        {name && name}
+        {name && t(name)}
         {badge && (
           <CBadge color={badge.color} className="ms-auto">
             {badge.text}
@@ -94,7 +96,7 @@ const AppSidebarNav = ({ items }: { items: Nav[] }) => {
   )
 }
 
-const AppSidebar = () => {
+const Sidebar = () => {
   const dispatch = useDispatch()
   const { sidebarShow, sidebarUnfoldable } = useSelector((state: State) => state.sidebar)
 
@@ -120,7 +122,7 @@ const AppSidebar = () => {
           onClick={() => dispatch(sidebarAction.sidebarShowToggle({ visible: false }))}
         />
       </CSidebarHeader>
-      <AppSidebarNav items={app_nav} />
+      <SidebarNav items={app_nav} />
       <CSidebarFooter className="border-top d-none d-lg-flex">
         <CSidebarToggler onClick={() => dispatch(sidebarAction.sidebarUnfoldableToggle())} />
       </CSidebarFooter>
@@ -128,4 +130,4 @@ const AppSidebar = () => {
   )
 }
 
-export default memo(AppSidebar)
+export default memo(Sidebar)

@@ -1,11 +1,9 @@
 import Swal, { SweetAlertIcon, SweetAlertOptions } from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
-type AlertProps = Alert & SweetAlertOptions
-
-export interface Alert {
+export type AlertProps = {
   type: SweetAlertIcon
-}
+} & SweetAlertOptions
 
 const alertTitle = {
   success: 'Success!',
@@ -15,17 +13,12 @@ const alertTitle = {
   question: 'Question?',
 }
 
-const sweetAlert = (props: AlertProps) => {
-  const { type, text, title, html } = props
-
-  const alertSwal = withReactContent(Swal)
-  const alert: SweetAlertOptions = {
+const sweetAlert = ({ type, title, ...props }: AlertProps) => {
+  return withReactContent(Swal).fire({
     ...props,
     icon: type,
     title: title ?? alertTitle[type],
-  }
-
-  return alertSwal.fire(alert)
+  })
 }
 
 export default sweetAlert

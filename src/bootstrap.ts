@@ -1,10 +1,13 @@
-import { CTableDataCellProps } from '@coreui/react/dist/esm/components/table/CTableDataCell';
-import '@tanstack/react-table'
-import { CellContext, Row, RowData } from '@tanstack/react-table';
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData extends RowData, TValue> {
-    getCellContext?: (context: CellContext<TData, TValue>) => CTableDataCellProps
-    getRowContext?: (context: Row<TData>) => CTableDataCellProps
-  }
-}
+// import Pusher from 'pusher-js'
+// window.Pusher = Pusher
+//
+// import Echo from 'laravel-echo'
+// window.Echo = new Echo({
+//   broadcaster: 'reverb',
+//   key: import.meta.env.VITE_REVERB_APP_KEY,
+//   wsHost: import.meta.env.VITE_REVERB_HOST,
+//   wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
+//   wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+//   forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+//   enabledTransports: ['ws', 'wss'],
+// })
