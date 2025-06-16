@@ -25,11 +25,11 @@ import { sidebarAction } from '@/store/slices/sidebar'
 // sidebar nav config
 import { State } from '@/types/store'
 import { app_nav, Nav } from '@/nav'
-import { NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 const SidebarNav = ({ items }: { items: Nav[] }) => {
-  const {t} = useTranslation()
+  const { t } = useTranslation()
   const navLink = (
     name: string,
     icon: ReactNode,

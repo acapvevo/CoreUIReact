@@ -1,6 +1,5 @@
 import Axios, { Method } from 'axios'
-import sweetAlert, { Alert } from './sweet-alert2'
-import useAuthHeader from 'react-auth-kit/hooks/useAuthHeader'
+import sweetAlert, { AlertProps } from './sweet-alert2'
 
 const axios = Axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -11,12 +10,12 @@ const axios = Axios.create({
   withXSRFToken: true,
 })
 
-type GetError = (error: any) => Alert
+type GetError = (error: any) => AlertProps
 export const getError: GetError = (error) => {
   if (error.response) {
     // The request was made and the server responded with a status code
     // that falls out of the range of 2xx
-    if(error.response.status == 400){
+    if (error.response.status == 400) {
       return {
         type: error.response.data.type,
         text: error.response.data.text,

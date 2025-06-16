@@ -3,16 +3,13 @@ import { useMemo, useState } from 'react'
 import { formatQuery, RuleGroupType } from 'react-querybuilder'
 
 const useTable = () => {
+  const sortingState = useState<SortingState>([])
+  const queryState = useState<RuleGroupType>({ combinator: 'and', rules: [] })
+  const includeDeletedState = useState(false)
   const paginationState = useState<PaginationState>({
     pageSize: 10,
     pageIndex: 0,
   })
-
-  const sortingState = useState<SortingState>([])
-
-  const queryState = useState<RuleGroupType>({ combinator: 'and', rules: [] })
-
-  const includeDeletedState = useState(false)
 
   const filters = useMemo(() => {
     return {

@@ -1,5 +1,5 @@
 import { CContainer } from '@coreui/react'
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router'
 import { Suspense } from 'react'
 import LoadingContent from '@/components/App/Loading/Content'
 

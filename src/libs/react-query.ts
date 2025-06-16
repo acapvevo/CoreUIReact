@@ -9,7 +9,6 @@ import {
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query'
-import useAuthHeader from 'react-auth-kit/hooks/useAuthHeader'
 import axios, { getError } from './axios'
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import sweetAlert, { AlertProps } from './sweet-alert2'
@@ -20,7 +19,6 @@ interface QueryProps<T, Q> extends UseQueryOptions<T>, AxiosRequestConfig<Q> {
 
 type AppQuery = <T, Q = { [k: string]: any }>(config: QueryProps<T, Q>) => UseQueryResult<T>
 export const useAppQuery: AppQuery = (config) => {
-  const header = useAuthHeader()
   const { url, method, payload, ...queryOption } = config
 
   return useQuery({
@@ -31,9 +29,6 @@ export const useAppQuery: AppQuery = (config) => {
         const response = await axios({
           method: method,
           url: url,
-          headers: {
-            Authorization: header,
-          },
           data: payload,
         })
 
@@ -50,7 +45,6 @@ type AppSuspenseQuery = <T, Q = { [k: string]: any }>(
   config: QueryProps<T, Q>,
 ) => UseSuspenseQueryResult<T>
 export const useAppSuspenseQuery: AppSuspenseQuery = (config) => {
-  const header = useAuthHeader()
   const { url, method, payload, ...queryOption } = config
 
   const query = useSuspenseQuery({
@@ -61,9 +55,6 @@ export const useAppSuspenseQuery: AppSuspenseQuery = (config) => {
         const response = await axios({
           method: method,
           url: url,
-          headers: {
-            Authorization: header,
-          },
           data: payload,
         })
 
@@ -79,7 +70,6 @@ export const useAppSuspenseQuery: AppSuspenseQuery = (config) => {
 
 type AppQueries = <T, Q = { [k: string]: any }>(configs: QueryProps<T, Q>[]) => UseQueryResult<T>[]
 export const useAppQueries: AppQueries = (configs) => {
-  const header = useAuthHeader()
 
   const queries = useQueries({
     queries: configs.map((config) => {
@@ -93,9 +83,6 @@ export const useAppQueries: AppQueries = (configs) => {
             const response = await axios({
               method: method,
               url: url,
-              headers: {
-                Authorization: header,
-              },
               data: payload,
             })
 
@@ -120,16 +107,9 @@ type UseMutationProps<T, R> = {
 type UseMutation = <T, R>(
   props: UseMutationProps<T, R>,
 ) => UseMutationResult<AxiosResponse<R & Pick<AlertProps, 'type' | 'text'>, T>, Error, T>
-export const useAppMutation = function <T, R>({ headers, ...props }: UseMutationProps<T, R>) {
-  const header = useAuthHeader()
+export const useAppMutation = function <T, R>(props: UseMutationProps<T, R>) {
 
-  return useGuestMutation({
-    ...props,
-    headers: {
-      ...headers,
-      Authorization: header,
-    },
-  })
+  return useGuestMutation(props)
 }
 
 export const useGuestMutation = function <T, R>({

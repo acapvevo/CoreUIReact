@@ -25,22 +25,22 @@ import ReCAPTCHA from 'react-google-recaptcha'
 import { Icon } from '@iconify/react'
 import LoadingButton from '@/components/App/Loading/Button'
 import { zodResolver } from '@hookform/resolvers/zod'
-import useAuth from '@/hooks/auth'
+import useAppAuth from '@/hooks/auth'
 import { useTranslation } from 'react-i18next'
 
 const Register = () => {
   const { t } = useTranslation()
-  const { login } = useAuth()
+  const { login } = useAppAuth()
   const {
     setValue,
     register,
     handleSubmit,
     formState: { errors },
+    getValues
   } = useForm<RegistrationInput & PasswordInput & CaptchaInput>({
     defaultValues: {
       name: '',
       email: '',
-      gender: undefined,
       password: '',
       password_confirmation: '',
       isCaptcha: false,
@@ -50,8 +50,12 @@ const Register = () => {
   const { isPending, mutate } = useAppMutation<RegistrationInput & PasswordInput, UserToken>({
     url: '/register',
     method: 'POST',
-    success: (data) => {
-      login(data)
+    success: () => {
+      login({
+        username: getValues('username'),
+        password: getValues('password'),
+        remember_me: false,
+      })
     },
   })
 

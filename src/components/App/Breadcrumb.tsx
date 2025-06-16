@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router'
 import { CBreadcrumb, CBreadcrumbItem } from '@coreui/react'
 
 import { RouteObj } from '@/types/route'

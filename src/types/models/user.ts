@@ -16,14 +16,21 @@ export interface User extends Model, UserInput {
   role_names: string[]
 }
 
-export type LoginInput = z.infer<typeof LoginScheme>
-export const LoginScheme = z
+const LoginScheme = z
   .object({
-    username: z.string().min(1),
     password: z.string().min(1),
     remember_me: z.boolean(),
   })
-  .required()
+
+export type LoginWithUsernameInput = z.infer<typeof LoginWithUsernameScheme>
+export const LoginWithUsernameScheme = LoginScheme.extend({
+  username: z.string().min(1),
+}).required()
+
+export type LoginWithEmailInput = z.infer<typeof LoginWithEmailScheme>
+export const LoginWithEmailScheme = LoginScheme.extend({
+  email: z.string().min(1).email(),
+}).required()
 
 export type RegistrationInput = z.infer<typeof RegistrationScheme>
 export const RegistrationScheme = z
@@ -93,11 +100,13 @@ export const PasswordScheme = z
     path: ['password_confirmation'],
   })
 
+export type UserSession = Pick<UserToken, 'user' | 'permissions' | 'roles'>
 export interface UserToken {
   access_token: string
   refresh_token: string
   token_type: 'Bearer'
-  expires_in: number
+  token_expires_in: number
+  refresh_expired_in: number
   user: User
   permissions: string[]
   roles: string[]

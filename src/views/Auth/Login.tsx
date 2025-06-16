@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react'
 import {
   CButton,
   CCard,
@@ -15,15 +14,14 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
-import { useForm, SubmitHandler, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import queryString from 'query-string'
 
-import useAuth from '@/hooks/auth'
+import useAppAuth from '@/hooks/auth'
 import LoadingButton from '@/components/App/Loading/Button'
-import { getLocalTimezone } from '@/libs/luxon'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { LoginInput, LoginScheme, UserToken } from '@/types/models/user'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { LoginWithUsernameInput, LoginWithUsernameScheme, UserToken } from '@/types/models/user'
+import { useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useGuestMutation } from '@/libs/react-query'
 
@@ -34,31 +32,23 @@ const Login = () => {
   const redirectToAfterAuthenticated = location.state
     ? location.state.redirectTo
     : queryString.parse(location.search)['redirectTo']
-  const { login } = useAuth(redirectToAfterAuthenticated)
+  const { login } = useAppAuth(redirectToAfterAuthenticated)
   const {
     register,
     handleSubmit,
     watch,
-    getValues,
-    formState: { errors },
-  } = useForm<LoginInput>({
+    formState: { errors, isLoading },
+  } = useForm<LoginWithUsernameInput>({
     defaultValues: {
       username: '',
       password: '',
       remember_me: false,
     },
-    resolver: zodResolver(LoginScheme),
-  })
-  const { mutate, isPending } = useGuestMutation<LoginInput, UserToken>({
-    url: 'login',
-    method: 'POST',
-    onSuccess: ({ data }) => {
-      login(data)
-    },
+    resolver: zodResolver(LoginWithUsernameScheme),
   })
 
   const onSubmit = handleSubmit((data) => {
-    mutate(data)
+    login(data)
   })
 
   return (
@@ -108,7 +98,7 @@ const Login = () => {
                     type="submit"
                     text={t('login')}
                     loadingText={t('logging_in')}
-                    processing={isPending}
+                    processing={isLoading}
                   />
                   <CButton
                     color="link"

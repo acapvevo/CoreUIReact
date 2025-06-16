@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router'
 
 import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'

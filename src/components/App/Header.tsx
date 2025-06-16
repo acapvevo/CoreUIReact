@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   CAvatar,
@@ -23,7 +23,6 @@ import {
   cilSun,
   cilUser,
 } from '@coreui/icons'
-import useAuthUser from 'react-auth-kit/hooks/useAuthUser'
 
 import { AppBreadcrumb } from '@/components/App/index'
 import { sidebarAction } from '@/store/slices/sidebar'
@@ -31,19 +30,18 @@ import { State } from '@/types/store'
 import useTheme from '@/hooks/theme'
 import { User } from '@/types/models/user'
 import { useTranslation } from 'react-i18next'
-import useAuth from '@/hooks/auth'
 import { AllowedAccess } from 'react-permission-role'
+import useAppAuth from '@/hooks/auth'
 
 const HeaderDropdown = () => {
   const { t } = useTranslation()
-  const { logout } = useAuth()
-  const user = useAuthUser<User>()
+  const {logout, session} = useAppAuth()
 
   return (
     <>
       <CDropdown variant="nav-item">
         <CDropdownToggle className="py-0 pe-0" caret={false}>
-          <CAvatar src={user!['profile_picture']} size="md" shape="rounded-0" />
+          <CAvatar src={session?.user.profile_picture} size="md" shape="rounded-0" />
         </CDropdownToggle>
         <CDropdownMenu className="pt-0">
           <CDropdownHeader>Settings</CDropdownHeader>
@@ -69,7 +67,7 @@ const HeaderDropdown = () => {
 }
 
 const Header = () => {
-  const user = useAuthUser<User>()
+  const {session} = useAppAuth()
   const headerRef = useRef<HTMLDivElement>(null)
   const { colorMode, setColorMode } = useTheme()
   const { i18n, t } = useTranslation()
@@ -184,7 +182,7 @@ const Header = () => {
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
           <div className="d-flex align-items-center">
-            <strong dir="auto">{user!['name']}</strong>
+            <strong dir="auto">{session?.user.name}</strong>
           </div>
           <HeaderDropdown />
         </CHeaderNav>

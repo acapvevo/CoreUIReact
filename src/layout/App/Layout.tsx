@@ -2,34 +2,34 @@ import { AppContent, AppSidebar, AppFooter, Header } from '@/components/App'
 import LoadingModal from '@/components/App/Loading/Modal'
 import { State } from '@/types/store'
 import { useSelector } from 'react-redux'
-import useIsAuthenticated from 'react-auth-kit/hooks/useIsAuthenticated'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router'
 import { useEffect, useState } from 'react'
-import useAuthUser from 'react-auth-kit/hooks/useAuthUser'
-import { User } from '@/types/models/user'
 import VerifyEmailModal from '@/components/App/Modal/VerifyEmail'
+import { useAuthChangeEffect, useIsAuthenticated } from '@reactit/auth'
+import useAppAuth from '@/hooks/auth'
+import { useEcho } from '@laravel/echo-react'
 
 const Layout = () => {
   const [verifyEmailModalVisibility, setVerifyEmailModalVisibility] = useState(false)
   const { loading } = useSelector((state: State) => state.loading)
-  const isAuthenticate = useIsAuthenticated()
-  const user = useAuthUser<User>()
   const location = useLocation()
   const navigate = useNavigate()
+  const { isAuthenticated, initialized, session } = useAppAuth()
+  const { listen } = useEcho(`user.${session?.user.id}`, 'Verified', (e) => console.log(e))
 
   useEffect(() => {
-    if (!isAuthenticate) {
+    listen()
+  }, [])
+  useAuthChangeEffect((context) => {
+    if (!isAuthenticated || !initialized) {
       navigate('/Login', {
         state: { redirectTo: location.pathname },
       })
     }
-    // else if (user && !user.email_verified_at) {
-    //   setVerifyEmailModalVisibility(true)
-    // }
-  }, [isAuthenticate, user?.email_verified_at])
+  })
 
-  if (!isAuthenticate)
-    return <Navigate to="/Auth/Login" state={{ redirectTo: location.pathname }} />
+  if (!isAuthenticated || !initialized)
+    return <Navigate to="/Login" state={{ redirectTo: location.pathname }} />
   return (
     <>
       <AppSidebar />

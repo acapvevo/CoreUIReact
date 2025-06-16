@@ -3,6 +3,7 @@ import { AccessorFnColumnDef, ColumnDef } from '@tanstack/react-table'
 import { Role } from '@/types/models/role'
 import { useTranslation } from 'react-i18next'
 import { Column } from '@/types/components/table'
+import { Leaves } from '@/types/helper'
 
 export const checkDisplayValueByColName = (colName: string, value: any) => {
   switch (colName) {
@@ -17,18 +18,24 @@ export const checkDisplayValueByColName = (colName: string, value: any) => {
   }
 }
 
-export const generateColumnDefObject: <T>(header: string, column: string) => AccessorFnColumnDef<T> = (
-  header,
-  column,
-) => {
+export const generateColumnDefObject: <T>(
+  header: string,
+  column: Leaves<T>,
+) => AccessorFnColumnDef<T> = (header, column) => {
   return {
-    header: header,
+    header,
     id: column,
-    accessorFn: (row) => checkDisplayValueByColName(column, row[column]),
+    accessorFn: (row) => {
+      const value = column.split('.').reduce((acc, part) => {
+        return acc && acc[part] !== undefined ? acc[part] : undefined
+      }, row)
+
+      return checkDisplayValueByColName(column, value)
+    },
   }
 }
 
-export const generateStatusColumnDef = function<T>() {
+export const generateStatusColumnDef = function <T>() {
   const { t } = useTranslation()
 
   return {

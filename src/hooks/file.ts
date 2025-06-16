@@ -1,19 +1,16 @@
 import axios, { getError } from '@/libs/axios'
-import sweetAlert, { Alert } from '@/libs/sweet-alert2'
+import sweetAlert, { AlertProps } from '@/libs/sweet-alert2'
 import { Download, Upload } from '@/types/hooks/file'
-import { AxiosResponse, Method } from 'axios'
-import useAuthHeader from 'react-auth-kit/hooks/useAuthHeader'
+import { AxiosResponse } from 'axios'
 
 const useFile = () => {
-  const header = useAuthHeader()
 
   const upload = async <R>({ url, data, method, onSuccess }: Upload<R>) => {
     try {
-      const response = await axios<any, AxiosResponse<R & Alert, FormData>, FormData>({
+      const response = await axios<any, AxiosResponse<R & AlertProps, FormData>, FormData>({
         url,
         method,
         headers: {
-          Authorization: header,
           'Content-Type': 'multipart/form-data',
         },
         data,
@@ -34,9 +31,6 @@ const useFile = () => {
       const response = await axios({
         url,
         method,
-        headers: {
-          Authorization: header,
-        },
         data,
       })
 

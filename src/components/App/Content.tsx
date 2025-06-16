@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
 import { CContainer } from '@coreui/react'
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router'
 import LoadingContent from './Loading/Content'
 
 const Content = () => {

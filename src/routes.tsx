@@ -3,9 +3,7 @@ import AppLayout from '@/layout/App/Layout'
 import TemplateLayout from '@/layout/Template/Layout'
 import { RouteObj } from '@/types/route'
 import { lazy } from 'react'
-import { Route, Routes } from 'react-router-dom'
-import AuthOutlet from '@auth-kit/react-router/AuthOutlet'
-import ErrorPage from '@/views/Error'
+import { Route, Routes } from 'react-router'
 
 export const app_routes: RouteObj[] = [
   {

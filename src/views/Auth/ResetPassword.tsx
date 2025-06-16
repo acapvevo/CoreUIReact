@@ -1,18 +1,14 @@
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import {
-  LoginInput,
-  PasswordInput,
-  PasswordScheme,
+  LoginWithUsernameInput,
   ResetPasswordInput,
   ResetPasswordScheme,
-  User,
-  UserToken,
 } from '@/types/models/user'
 import queryString from 'query-string'
 import { useGuestMutation } from '@/libs/react-query'
-import useAuth from '@/hooks/auth'
+import useAppAuth from '@/hooks/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   CButton,
@@ -37,7 +33,7 @@ const ResetPassword = () => {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login } = useAppAuth()
   const {
     reset,
     getValues,
@@ -60,21 +56,11 @@ const ResetPassword = () => {
     url: '/password/reset',
     method: 'POST',
     onSuccess: () => {
-      mutateLogin({
+      login({
         email: getValues('email'),
         password: getValues('password'),
         remember_me: false,
       })
-    },
-  })
-  const { mutate: mutateLogin, isPending: isLoginPending } = useGuestMutation<
-    Pick<User, 'email'> & Omit<LoginInput, 'username'>,
-    UserToken
-  >({
-    url: '/login',
-    method: 'POST',
-    onSuccess: ({ data }) => {
-      login(data)
     },
   })
 
@@ -147,18 +133,9 @@ const ResetPassword = () => {
                     className="px-4"
                     type="submit"
                     text={t('reset_password')}
-                    loadingText={isLoginPending ? t('logging_in') : t('resetting_password')}
-                    processing={isLoginPending || isResetPending}
+                    loadingText={t('resetting_password')}
+                    processing={isResetPending}
                   />
-                  <CButton
-                    color="link"
-                    className="px-0"
-                    onClick={() =>
-                      navigate('/ForgotPassword', { state: { email: getValues('email') } })
-                    }
-                  >
-                    {t('forgot_your_password?')}
-                  </CButton>
                 </div>
               </CForm>
             </CCardBody>

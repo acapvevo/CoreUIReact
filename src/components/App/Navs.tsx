@@ -10,7 +10,7 @@ import {
 } from '@coreui/react'
 import { useState } from 'react'
 import { NavsProps } from '@/types/components/navs'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router'
 import { AllowedAccess, usePermission } from 'react-permission-role'
 import useAsyncEffect from 'use-async-effect'
 

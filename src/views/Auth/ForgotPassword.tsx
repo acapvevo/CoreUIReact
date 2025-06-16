@@ -17,7 +17,7 @@ import { cilAt } from '@coreui/icons'
 import LoadingButton from '@/components/App/Loading/Button'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 const ForgotPassword = () => {

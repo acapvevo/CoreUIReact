@@ -1,28 +1,27 @@
 import { VerifyEmailFormProps, VerifyEmailStatus } from '@/types/forms/verifyEmail'
-import { useAppMutation } from '@/libs/react-query'
 import { useEffect, useState } from 'react'
 import useAsyncEffect from 'use-async-effect'
-import useAuthUser from 'react-auth-kit/hooks/useAuthUser'
 import { User } from '@/types/models/user'
 import { checkUserVerified } from '@/utils/query'
+import useAppAuth from '@/hooks/auth'
 
 const VerifyEmailForm = ({ onClose }: VerifyEmailFormProps) => {
   const [isLinkSent, setIsLinkSent] = useState(false)
-  const user = useAuthUser<User>()
+  const { session } = useAppAuth()
   const { refetch, isFetching, data } = checkUserVerified()
 
   useAsyncEffect(async () => {
-    window.Echo.private(`user.${user?.id}`)
-      .listen('Verified',() => {
-        console.log('Verified')
-      })
+    window.Echo.private(`user.${session?.user.id}`).listen('Verified', () => {
+      console.log('Verified')
+    })
 
     await refetch()
 
     return () => {
-      window.Echo.leave(`user.${user?.id}`);
+      window.Echo.leave(`user.${session?.user.id}`)
     }
   }, [])
+
   useEffect(() => {
     switch (data?.status) {
       case VerifyEmailStatus.VERIFIED:

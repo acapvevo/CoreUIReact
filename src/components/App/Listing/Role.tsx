@@ -1,7 +1,6 @@
 import { useAppQuery } from '@/libs/react-query'
 import { Role } from '@/types/models/role'
 import { useEffect } from 'react'
-import Action from '../Button/Action'
 import LoadingContent from '../Loading/Content'
 import sweetAlert from '@/libs/sweet-alert2'
 import useRequest from '@/hooks/request'

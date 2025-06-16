@@ -1,58 +1,31 @@
 import axios, { getError } from '@/libs/axios'
-import useSignIn from 'react-auth-kit/hooks/useSignIn'
-import useSignOut from 'react-auth-kit/hooks/useSignOut'
-import { useNavigate } from 'react-router-dom'
-import useAuthHeader from 'react-auth-kit/hooks/useAuthHeader'
+import { useNavigate } from 'react-router'
 import sweetAlert from '@/libs/sweet-alert2'
-import { LoginInput, UserToken } from '@/types/models/user'
+import { LoginWithEmailInput, LoginWithUsernameInput, UserSession } from '@/types/models/user'
 import { usePermission } from 'react-permission-role'
+import { useAuth } from '@reactit/auth'
 
-const useAuth = (redirectIfAuthenticated?: string) => {
-  const signIn = useSignIn()
-  const signOut = useSignOut()
-  const authHeader = useAuthHeader()
+const useAppAuth = (redirectIfAuthenticated?: string) => {
+  const {
+    user: session,
+    initialized,
+    isAuthenticated,
+    signInAsync,
+    signOutAsync,
+  } = useAuth<UserSession>()
   const navigate = useNavigate()
   const { setUser } = usePermission()
 
-  const login = (data: UserToken) => {
-    const isSign = signIn({
-      auth: {
-        token: data['access_token'],
-        type: data['token_type'],
-      },
-      refresh: data['refresh_token'],
-      userState: data['user'],
-    })
+  const login = async (data: LoginWithUsernameInput | LoginWithEmailInput) => {
+    try {
+      await signInAsync(data)
 
-    if (isSign) {
       setUser({
-        id: data.user.id,
-        roles: data.roles,
-        permissions: data.permissions,
+        id: session?.user.id,
+        permissions: session?.permissions,
+        roles: session?.roles,
       })
       navigate(redirectIfAuthenticated ?? '/', { replace: true })
-    } else {
-      sweetAlert({
-        type: 'error',
-        text: 'Something went wrong, Please try again',
-      })
-    }
-  }
-
-  const loginWithPost = async (payload: LoginInput) => {
-    try {
-      const { data } = await axios.post<UserToken>('/login', payload)
-
-      const isSign = signIn({
-        auth: {
-          token: data['access_token'],
-          type: data['token_type'],
-        },
-        refresh: data['refresh_token'],
-        userState: data['user'],
-      })
-
-      login(data)
     } catch (error: any) {
       sweetAlert(getError(error))
     }
@@ -60,13 +33,7 @@ const useAuth = (redirectIfAuthenticated?: string) => {
 
   const logout = async () => {
     try {
-      await axios.get('/logout', {
-        headers: {
-          Authorization: authHeader,
-        },
-      })
-      signOut()
-
+      await signOutAsync()
       navigate('/Login', { replace: true })
     } catch (error: any) {
       sweetAlert(getError(error))
@@ -74,10 +41,12 @@ const useAuth = (redirectIfAuthenticated?: string) => {
   }
 
   return {
-    loginWithPost,
+    session,
     logout,
     login,
+    initialized,
+    isAuthenticated,
   }
 }
 
-export default useAuth
+export default useAppAuth
