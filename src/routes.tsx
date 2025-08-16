@@ -36,6 +36,11 @@ export const app_routes: RouteObj[] = [
         name: 'User',
         element: lazy(() => import('@/views/Setting/User')),
       },
+      {
+        path: '/Health',
+        name: 'Health',
+        element: lazy(() => import('@/views/Setting/Health')),
+      },
     ],
   },
 ]

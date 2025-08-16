@@ -1,100 +1,32 @@
-import { useAppQuery, useAppSuspenseQuery } from '@/libs/react-query'
-import { Role, RoleInput } from '@/types/models/role'
+import { RoleInput } from '@/types/models/role'
 import LoadingContent from '../Loading/Content'
-import { CFormCheck, CFormFloating, CFormInput, CFormLabel } from '@coreui/react'
+import { CFormInput, CFormLabel } from '@coreui/react'
 import { useEffect } from 'react'
-import { Permission } from '@/types/models/permission'
 import { Form } from '@/types/form'
 import { useTranslation } from 'react-i18next'
+import { useFieldArray, useForm } from 'react-hook-form'
+import { RoleFormControl } from '@/utils/form'
+import { TreeViewComponent } from '@syncfusion/ej2-react-navigations'
+import { getPermissions, getRole } from '@/utils/query'
 
-const RoleForm = ({
-  id,
-  enabled,
-  viewing,
-  form: {
+const RoleForm = ({ id, enabled, viewing }: {} & Form<RoleInput>) => {
+  const { data: permissions, isLoading: isPermissionsLoading } = getPermissions(enabled)
+  const { data: role, isFetching } = getRole(id, enabled)
+  const {
     register,
-    reset,
+    formState: { errors },
     setValue,
     getValues,
-    formState: { errors },
-  },
-}: {} & Form<RoleInput>) => {
-  const {t} = useTranslation()
-  const { data: permissions } = useAppSuspenseQuery<Permission[]>({
-    queryKey: ['permissions', 'form'],
-    url: '/setting/permission',
-    method: 'GET',
+  } = useForm({
+    formControl: RoleFormControl,values: role
   })
-  const { data: role, isFetching } = useAppQuery<Role>({
-    queryKey: ['role', 'form', id],
-    url: `/setting/role/${id}`,
-    method: 'GET',
-    enabled: !!id && enabled,
+  const { fields } = useFieldArray({
+    control: RoleFormControl.control,
+    name: 'permissions',
   })
+  const { t } = useTranslation()
 
-  useEffect(() => {
-    if (role) reset(role)
-  }, [role, isFetching])
-
-  const permission_register = register('permissions', {
-    disabled: viewing,
-    onChange: (e) => {
-      const currentPermissions = getValues('permissions')
-      const currentPermission = permissions.find((permission) => permission.name == e.target.value)
-
-      if (!!currentPermission) {
-        if (!currentPermission.name.includes('.')) {
-          // parent permission
-          permissions
-            .filter((permission) => permission.name.includes(`${currentPermission!.name}.`))
-            .forEach((permission) => {
-              if (e.target.checked)
-                setValue('permissions', [...getValues('permissions'), permission.name])
-              else
-                setValue(
-                  'permissions',
-                  getValues('permissions').filter(
-                    (permissionID) => permissionID != permission.name,
-                  ),
-                )
-            })
-        } else {
-          // child permission
-          const parentPermissionName = currentPermission.name.split('.')[0]
-          const permissionParent = permissions.find((permission) =>
-            permission.name.includes(parentPermissionName),
-          )!
-
-          if (e.target.checked) {
-            setValue(
-              'permissions',
-              currentPermissions.includes(permissionParent.name)
-                ? currentPermissions
-                : [...currentPermissions, permissionParent.name],
-            )
-          } else {
-            let isAllChildUnchecked = true
-
-            permissions
-              .filter((permission) => permission.name.includes(`${parentPermissionName}.`))
-              .every((permission) => {
-                isAllChildUnchecked = currentPermissions.includes(permission.name)
-
-                return !isAllChildUnchecked
-              })
-
-            if (!isAllChildUnchecked)
-              setValue(
-                'permissions',
-                currentPermissions.filter((id) => id != permissionParent.name),
-              )
-          }
-        }
-      }
-    },
-  })
-
-  if (isFetching) return <LoadingContent />
+  if (!permissions || isPermissionsLoading || isFetching) return <LoadingContent />
 
   return (
     <>
@@ -116,41 +48,62 @@ const RoleForm = ({
           <strong>{t('permissions')}</strong>
         </CFormLabel>
         <div id="permissions">
-          {permissions
-            .filter((permission) => !permission.name.includes('.'))
-            .map((permissionParent) => {
-              return (
-                <>
-                  <CFormCheck
-                    className="py-1"
-                    key={permissionParent.id}
-                    inline
-                    type="checkbox"
-                    value={permissionParent.name}
-                    label={<strong className="h-6">{permissionParent.name.toUpperCase()}</strong>}
-                    {...permission_register}
-                  />
-                  <div key={`child_${permissionParent.id}`}>
-                    {permissions
-                      .filter((permission) => permission.name.includes(`${permissionParent.name}.`))
-                      .map((permissionChild) => {
-                        return (
-                          <CFormCheck
-                            key={permissionChild.id}
-                            inline
-                            type="checkbox"
-                            value={permissionChild.name}
-                            label={permissionChild.name
-                              .replace(`${permissionParent.name}.`, '')
-                              .toUpperCase()}
-                            {...permission_register}
-                          />
-                        )
-                      })}
-                  </div>
-                </>
-              )
-            })}
+          <TreeViewComponent
+            disabled={viewing}
+            showCheckBox
+            fields={{
+              id: 'id',
+              parentID: 'pid',
+              text: 'name',
+              hasChildren: 'hasChild',
+              dataSource: permissions.map(({ id, name }) => {
+                const [parent, child] = name.split('.')
+
+                return !name.includes('.')
+                  ? { id, name: parent.toUpperCase(), hasChild: true, expanded: true }
+                  : {
+                      id,
+                      pid: permissions.find(({ name }) => name == parent)?.id ?? 1,
+                      name: child.toUpperCase(),
+                      isChecked: fields.some((field) => field.name == name),
+                    }
+              }),
+            }}
+            nodeChecked={(args) => {
+              const permission = permissions.find((p) => p.id == args.data[0].id)
+              if (!permission) return
+
+              const isChecked = args.data[0].isChecked == 'true'
+              let newPermissions = getValues('permissions')
+
+              if (!permission.name.includes('.')) {
+                newPermissions = isChecked
+                  ? [
+                      ...newPermissions,
+                      ...permissions.filter((p) => p.name.startsWith(permission.name)),
+                    ]
+                  : newPermissions.filter((p) => !p.name.startsWith(permission.name))
+              } else {
+                const parentPermission = permissions.find(
+                  (p) => p.name == permission.name.split('.')[0],
+                ) ?? { name: '' }
+
+                if (isChecked) {
+                  if (!newPermissions.some((p) => p.name == parentPermission.name))
+                    newPermissions = [...newPermissions, parentPermission]
+
+                  newPermissions = [...newPermissions, permission]
+                } else {
+                  newPermissions = newPermissions.filter((p) => p.name != permission.name)
+
+                  if (!newPermissions.some((p) => p.name.startsWith(`${parentPermission.name}.`)))
+                    newPermissions = newPermissions.filter((p) => p.name !== parentPermission.name)
+                }
+              }
+
+              setValue('permissions', newPermissions)
+            }}
+          />
         </div>
       </div>
     </>

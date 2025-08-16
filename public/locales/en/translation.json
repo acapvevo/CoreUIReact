@@ -87,6 +87,10 @@
   "status": "Status",
   "active": "Active",
   "inactive": "Inactive",
+  "Role": "Role",
+  "User": "User",
+  "Health": "Health",
+  "Setting": "Setting",
   "zod": {
     "errors": {
       "invalid_type": "Expected {{expected}}, received {{received}}",

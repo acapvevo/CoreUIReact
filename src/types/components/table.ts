@@ -8,16 +8,17 @@ import {
   SortingState,
   Table,
 } from '@tanstack/react-table'
-import { Dispatch, PropsWithChildren, ReactNode, SetStateAction } from 'react'
+import { Dispatch, PropsWithChildren, ReactElement, ReactNode, SetStateAction } from 'react'
 import { Field } from 'react-querybuilder'
 import { ContextMenuProps } from './context_menu'
 import { CTableRowProps } from '@coreui/react/dist/esm/components/table/CTableRow'
+import { Model } from '@/types/model'
 
-export type Column<T> = ColumnDef<T> &
+export type Column<T extends Model> = ColumnDef<T> &
   Field & { includeInTable?: boolean; includeInQuery?: boolean }
-export type Columns<T> = Column<T>[]
+export type Columns<T extends Model> = Column<T>[]
 
-export interface TableProps<T> extends CTableProps {
+export interface TableProps<T extends Model> extends CTableProps {
   data?: Paginate<T>
   columnDef: ColumnDef<T>[]
   pageSize?: number
@@ -31,14 +32,14 @@ export interface TableProps<T> extends CTableProps {
   RowProps?: TableContentProps<T>['RowProps']
 }
 
-interface TableContentProps<T> extends CTableProps {
+export interface TableContentProps<T extends Model> extends CTableProps {
   table: Table<T>
   columnOrder: string[]
   useSorting: boolean
   RowsContextMenu?: (props: { row: Row<T> }) => ReactNode
   RowProps?: (row: Row<T>) => CTableRowProps
 }
-export type TableContentType = <T>(props: TableContentProps<T>) => JSX.Element
+export type TableContentType = <T extends Model>(props: TableContentProps<T>) => JSX.Element
 
 export type DraggableHeaderType = <T>(props: {
   header: Header<T, unknown>
@@ -46,32 +47,36 @@ export type DraggableHeaderType = <T>(props: {
 }) => JSX.Element
 export type DragAlongCellType = <T>({ cell }: { cell: Cell<T, unknown> }) => JSX.Element
 
-interface TableContextMenuProps<T> {
+interface TableContextMenuProps<T extends Model> {
   table: Table<T>
 }
 
-export type TableHeaderContextMenuType = <T>(
+export type TableHeaderContextMenuType = <T extends Model>(
   props: TableContextMenuProps<T> & ContextMenuProps,
 ) => JSX.Element
 
-export type TableRowsContextMenuType = <T>(
+export type TableRowsContextMenuType = <T extends Model>(
   props: PropsWithChildren<Partial<TableContextMenuProps<T>> & ContextMenuProps>,
 ) => JSX.Element
 
 export interface Paginate<T> {
-  current_page: number
   data: T[]
-  first_page_url: string
-  from: number
-  last_page: number
-  last_page_url: string
-  links: Link[]
-  next_page_url: string | null
-  path: string
-  per_page: number
-  prev_page_url: string | null
-  to: number
-  total: number
+  links: {
+    first: string
+    last: string
+    prev: string | null
+    next: string | null
+  }
+  meta: {
+    current_page: number
+    from: number
+    last_page: number
+    links: Link[]
+    path: string
+    per_page: number
+    to: number
+    total: number
+  }
 }
 
 interface Link {

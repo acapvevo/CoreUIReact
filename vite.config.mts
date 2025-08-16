@@ -19,6 +19,7 @@ export default defineConfig(() => {
       preprocessorOptions: {
         scss: {
           quietDeps: true,
+          loadPaths: ['./node_modules/@syncfusion']
         },
       },
     },

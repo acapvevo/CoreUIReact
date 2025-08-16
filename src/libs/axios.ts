@@ -2,7 +2,7 @@ import Axios, { Method } from 'axios'
 import sweetAlert, { AlertProps } from './sweet-alert2'
 
 const axios = Axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_LARAVEL_URL,
   headers: {
     'X-Requested-With': 'XMLHttpRequest',
   },

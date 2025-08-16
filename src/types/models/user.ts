@@ -2,25 +2,28 @@ import { z } from '@/libs/zod'
 import { Model } from '../model'
 import { PhoneNumberUtil } from 'google-libphonenumber'
 import { CountryIso2 } from 'react-international-phone'
+import { Role, RoleScheme } from '@/types/models/role'
 
 export enum Gender {
   MALE = 'M',
   FEMALE = 'F',
 }
 
-export interface User extends Model, UserInput {
+export type User = {
   profile_picture: string
   timezone: string
   last_login: string
   email_verified_at: string | null
-  role_names: string[]
-}
+  address: Address
+  phone_number: PhoneNumber
+  roles: Role[]
+} & Model &
+  RegistrationInput
 
-const LoginScheme = z
-  .object({
-    password: z.string().min(1),
-    remember_me: z.boolean(),
-  })
+const LoginScheme = z.object({
+  password: z.string().min(1),
+  remember_me: z.boolean(),
+})
 
 export type LoginWithUsernameInput = z.infer<typeof LoginWithUsernameScheme>
 export const LoginWithUsernameScheme = LoginScheme.extend({
@@ -42,9 +45,10 @@ export const RegistrationScheme = z
   })
   .required()
 
-export interface Address extends Model, AddressInput {
+export type Address = {
   user_id: number
-}
+} & Model &
+  AddressInput
 
 export type AddressInput = z.infer<typeof AddressScheme>
 export const AddressScheme = z
@@ -58,6 +62,8 @@ export const AddressScheme = z
     country: z.string().nullable(),
   })
   .required()
+
+export type PhoneNumber = Model & PhoneNumberInput
 
 export type PhoneNumberInput = z.infer<typeof PhoneNumberSchema>
 export const PhoneNumberSchema = z
@@ -85,6 +91,7 @@ export const UserSchema = z
   .object({
     phone_number: PhoneNumberSchema,
     address: AddressScheme,
+    roles: z.array(RoleScheme.pick({ name: true })),
   })
   .merge(RegistrationScheme)
 
@@ -111,11 +118,6 @@ export interface UserToken {
   permissions: string[]
   roles: string[]
 }
-
-export type RolesInput = z.infer<typeof RolesScheme>
-export const RolesScheme = z.object({
-  roles: z.array(z.string()).min(1),
-})
 
 export type ResetPasswordInput = z.infer<typeof ResetPasswordScheme>
 export const ResetPasswordScheme = PasswordScheme.and(

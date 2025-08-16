@@ -4,6 +4,7 @@ import { Role } from '@/types/models/role'
 import { useTranslation } from 'react-i18next'
 import { Column } from '@/types/components/table'
 import { Leaves } from '@/types/helper'
+import { Model } from '@/types/model'
 
 export const checkDisplayValueByColName = (colName: string, value: any) => {
   switch (colName) {
@@ -35,7 +36,7 @@ export const generateColumnDefObject: <T>(
   }
 }
 
-export const generateStatusColumnDef = function <T>() {
+export const generateStatusColumnDef = function <T extends Model>() {
   const { t } = useTranslation()
 
   return {

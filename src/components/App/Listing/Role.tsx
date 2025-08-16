@@ -1,4 +1,3 @@
-import { useAppQuery } from '@/libs/react-query'
 import { Role } from '@/types/models/role'
 import { useEffect } from 'react'
 import LoadingContent from '../Loading/Content'
@@ -6,15 +5,17 @@ import sweetAlert from '@/libs/sweet-alert2'
 import useRequest from '@/hooks/request'
 import { RoleListingProps } from '@/types/listings/role'
 import Table from '../Table'
-import { Columns, Paginate } from '@/types/components/table'
-import { generateColumnDefObject, generateStatusColumnDef } from '@/utils/table'
+import { Columns } from '@/types/components/table'
+import { generateColumnDefObject } from '@/utils/table'
 import { formatForDateTimeLocalInput } from '@/libs/luxon'
-import SearchBuilder from '@/components/App/SearchBuilder'
+import FilterEngine from '@/components/App/FilterEngine'
 import { useTranslation } from 'react-i18next'
 import useTable from '@/hooks/table'
-import { ActionContextMenuButton, ActionGroupButton } from '@/components/App/Button'
+import { ActionContextMenuButton } from '@/components/App/Button'
+import { getRoleListing } from '@/utils/query'
+import LoadingModal from '../Loading/Modal'
 
-const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProps) => {
+const RoleListing = ({ setID, setViewing, setVisible }: RoleListingProps) => {
   const { t } = useTranslation()
   const {
     paginationState: [pagination, setPagination],
@@ -22,12 +23,8 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
     queryState: [query, setQuery],
     params,
   } = useTable()
-  const { data, refetch, isFetching } = useAppQuery<Paginate<Role>>({
-    url: `/setting/role?${params.toString()}`,
-    method: 'GET',
-    queryKey: ['role', 'list'],
-  })
-  const { deleteAsync } = useRequest('/setting/role')
+  const { data, refetch, isFetching } = getRoleListing(params)
+  const { deleteAsync, isLoading } = useRequest('/setting/role')
   const fields: Columns<Role> = [
     {
       label: t('role'),
@@ -53,17 +50,16 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
       includeInQuery: false,
       includeInTable: true,
     },
-    generateStatusColumnDef(),
   ]
 
   useEffect(() => {
     refetch()
-  }, [counter, query, sorting])
+  }, [query, sorting])
 
   return (
     <>
       <div className="py-3">
-        <SearchBuilder
+        <FilterEngine
           query={query}
           setQuery={setQuery}
           fields={fields.filter((field) => field.includeInQuery)}
@@ -93,6 +89,7 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
                       setID(id)
                       setVisible(true)
                     },
+                    permissions: ['roles.view'],
                   }}
                   editDropdownItemProps={{
                     onClick: () => {
@@ -100,6 +97,7 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
                       setID(id)
                       setVisible(true)
                     },
+                    permissions: ['roles.update'],
                   }}
                   deleteDropdownItemProps={{
                     className: !!deleted_at ? 'd-none' : '',
@@ -115,6 +113,7 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
                         if (result.isConfirmed && (await deleteAsync(id))) refetch()
                       })
                     },
+                    permissions: ['roles.delete'],
                   }}
                   restoreDropdownItemProps={{
                     className: !!deleted_at ? '' : 'd-none',
@@ -130,6 +129,7 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
                         if (result.isConfirmed && (await deleteAsync(id))) refetch()
                       })
                     },
+                    permissions: ['roles.delete'],
                   }}
                 />
               </>
@@ -137,6 +137,7 @@ const RoleListing = ({ counter, setID, setViewing, setVisible }: RoleListingProp
           }}
         />
       )}
+      <LoadingModal loading={isLoading} />
     </>
   )
 }

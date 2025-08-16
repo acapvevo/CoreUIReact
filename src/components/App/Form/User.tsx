@@ -1,8 +1,8 @@
 import { useAppQuery } from '@/libs/react-query'
 import { Form } from '@/types/form'
 import { Role } from '@/types/models/role'
-import { RolesInput, User, UserInput } from '@/types/models/user'
-import { useEffect } from 'react'
+import { User, UserInput } from '@/types/models/user'
+import { useContext, useEffect } from 'react'
 import LoadingContent from '../Loading/Content'
 import {
   CRow,
@@ -17,38 +17,31 @@ import {
   CFormLabel,
 } from '@coreui/react'
 import { FlagImage, defaultCountries, parseCountry, usePhoneInput } from 'react-international-phone'
-import { Controller } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import 'react-international-phone/style.css'
 import { useTranslation } from 'react-i18next'
 import Select from '../Input/Select'
+import { IPInfoContext } from 'ip-info-react'
+import { lowerCase } from 'lodash'
+import { UserFormControl } from '@/utils/form'
+import { getRoles, getUser } from '@/utils/query'
 
-const UserForm = ({
-  id,
-  enabled,
-  viewing,
-  form: {
+const UserForm = ({ id, enabled, viewing }: Form<UserInput>) => {
+  const { data: roles, isFetching: isRolesFetching } = getRoles(enabled)
+  const { data: user, isFetching } = getUser(id, !!roles && enabled)
+  const {
     register,
-    reset,
     setValue,
     getValues,
     watch,
     control,
     formState: { errors },
-  },
-}: Form<UserInput & RolesInput>) => {
+  } = useForm({
+    formControl: UserFormControl,
+    values: user
+  })
   const { t } = useTranslation()
-  const { data: roles, isFetching: isRolesFetching } = useAppQuery<Role[]>({
-    url: `/setting/role`,
-    method: 'GET',
-    queryKey: ['roles', 'form'],
-    enabled: enabled,
-  })
-  const { data: user, isFetching } = useAppQuery<User>({
-    queryKey: ['user', 'form', id],
-    url: `/setting/user/${id}`,
-    method: 'GET',
-    enabled: !!id && !!roles && enabled,
-  })
+  const { country_code } = useContext(IPInfoContext)
   const {
     inputValue,
     handlePhoneValueChange,
@@ -56,19 +49,14 @@ const UserForm = ({
     setCountry,
   } = usePhoneInput({
     countries: defaultCountries,
-    defaultCountry: getValues('phone_number.iso2') ?? 'my',
+    defaultCountry:
+      getValues('phone_number.iso2') ?? (country_code && lowerCase(country_code)) ?? 'my',
     value: getValues('phone_number.number') ?? undefined,
     onChange: (data) => {
       setValue('phone_number.number', data.phone)
       setValue('phone_number.iso2', data.country.iso2)
     },
   })
-
-  useEffect(() => {
-    if (user) {
-      reset({ ...user, roles: user.role_names })
-    }
-  }, [user, isFetching])
 
   if (isFetching || isRolesFetching) return <LoadingContent />
 
@@ -85,6 +73,7 @@ const UserForm = ({
         />
       </CCol>
       <CCol lg={6}>
+        <CFormLabel htmlFor="roles">{t('roles')}</CFormLabel>
         <Controller
           name="roles"
           disabled={viewing}
@@ -95,7 +84,6 @@ const UserForm = ({
           }) => {
             return (
               <>
-                <CFormLabel htmlFor="roles">{t('roles')}</CFormLabel>
                 <Select
                   async={false}
                   id="roles"
@@ -105,7 +93,7 @@ const UserForm = ({
                   }}
                   isMulti
                   onChange={(selections) =>
-                    onChange(selections.map((selection) => selection.value))
+                    onChange(selections.map((selection) => ({ name: selection.value })))
                   }
                   onBlur={onBlur}
                   ref={ref}
@@ -119,8 +107,8 @@ const UserForm = ({
                   })}
                   value={value.map((role) => {
                     return {
-                      value: role,
-                      label: role,
+                      value: role.name,
+                      label: role.name,
                     }
                   })}
                 />
@@ -171,7 +159,7 @@ const UserForm = ({
         <CFormLabel htmlFor="phone_number">{t('phone_number')}</CFormLabel>
         <CInputGroup size="sm" id="phone_number">
           <CDropdown variant="input-group" direction="dropend">
-            <CDropdownToggle color="secondary" variant="outline">
+            <CDropdownToggle disabled={viewing} color="secondary" variant="outline">
               <FlagImage iso2={watch('phone_number.iso2') ?? 'my'} />
             </CDropdownToggle>
             <CDropdownMenu className="overflow-auto" style={{ height: '300px' }}>

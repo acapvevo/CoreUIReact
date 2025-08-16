@@ -5,9 +5,9 @@ import {
   bootstrapControlElements,
   QueryBuilderBootstrap,
 } from '@react-querybuilder/bootstrap'
-import { SearchBuilderProps } from '@/types/components/search_builder'
+import { FilterEngineProps } from '@/types/components/filter_engine'
 
-const SearchBuilder = ({ fields, query, setQuery }: SearchBuilderProps) => {
+const FilterEngine = ({ fields, query, setQuery }: FilterEngineProps) => {
   return (
     <QueryBuilderBootstrap>
       <QueryBuilder
@@ -21,4 +21,4 @@ const SearchBuilder = ({ fields, query, setQuery }: SearchBuilderProps) => {
   )
 }
 
-export default SearchBuilder
+export default FilterEngine

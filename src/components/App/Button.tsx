@@ -2,6 +2,7 @@ import { ActionButtonsProps, ActionDropdownItemProps, ActionProps } from '@/type
 import { CButton, CButtonGroup, CDropdownItem } from '@coreui/react'
 import { Icon } from '@iconify/react'
 import { useTranslation } from 'react-i18next'
+import { AllowedAccess } from 'react-permission-role'
 
 export const ActionButtons = ({
   viewButtonProps,
@@ -59,24 +60,32 @@ export const ActionContextMenuButton = ({
   return (
     <>
       {viewDropdownItemProps && (
-        <CDropdownItem as="button" {...viewDropdownItemProps}>
-          <Icon icon="carbon:view-filled" inline /> {t('View')}
-        </CDropdownItem>
+        <AllowedAccess {...viewDropdownItemProps}>
+          <CDropdownItem as="button" {...viewDropdownItemProps}>
+            <Icon icon="carbon:view-filled" inline /> {t('View')}
+          </CDropdownItem>
+        </AllowedAccess>
       )}
       {editDropdownItemProps && (
-        <CDropdownItem as="button" {...editDropdownItemProps}>
-          <Icon icon="material-symbols:edit" inline /> {t('Edit')}
-        </CDropdownItem>
+        <AllowedAccess {...editDropdownItemProps}>
+          <CDropdownItem as="button" {...editDropdownItemProps}>
+            <Icon icon="material-symbols:edit" inline /> {t('Edit')}
+          </CDropdownItem>
+        </AllowedAccess>
       )}
-      {deleteDropdownItemProps  && (
-        <CDropdownItem as="button" {...deleteDropdownItemProps}>
+      {deleteDropdownItemProps && (
+        <AllowedAccess {...deleteDropdownItemProps}>
+          <CDropdownItem as="button" {...deleteDropdownItemProps}>
           <Icon icon="material-symbols:delete" inline /> {t('Delete')}
-        </CDropdownItem>
+          </CDropdownItem>
+        </AllowedAccess>
       )}
-      {restoreDropdownItemProps  && (
-        <CDropdownItem as="button" {...restoreDropdownItemProps}>
-          <Icon icon="material-symbols:restore-from-trash-outline" inline /> {t('Restore')}
-        </CDropdownItem>
+      {restoreDropdownItemProps && (
+        <AllowedAccess {...restoreDropdownItemProps}>
+          <CDropdownItem as="button" {...restoreDropdownItemProps}>
+            <Icon icon="material-symbols:restore-from-trash-outline" inline /> {t('Restore')}
+          </CDropdownItem>
+        </AllowedAccess>
       )}
     </>
   )

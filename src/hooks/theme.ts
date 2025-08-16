@@ -1,4 +1,5 @@
 import { useColorModes } from '@coreui/react'
+import { useEffect } from 'react'
 
 const useTheme = () => {
   const colorMode = useColorModes()
@@ -10,6 +11,14 @@ const useTheme = () => {
   const isLight =
     colorMode.colorMode == 'light' ||
     (colorMode.colorMode == 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches)
+
+  useEffect(() => {
+    if (isLight) {
+      document.body.classList.remove('e-dark-mode')
+    } else {
+      document.body.classList.add('e-dark-mode')
+    }
+  }, [colorMode.colorMode])
 
   return {
     ...colorMode,

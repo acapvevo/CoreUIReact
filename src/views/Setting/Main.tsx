@@ -6,17 +6,22 @@ const Main = () => {
 
   return (
     <Navs
-      mainPath="/Setting"
+      base="Setting"
       list={[
         {
           title: t('Role'),
-          path: '/Role',
+          path: 'Role',
           permissions: ['roles'],
         },
         {
           title: t('User'),
-          path: '/User',
+          path: 'User',
           permissions: ['users'],
+        },
+        {
+          title: t('Health'),
+          path: 'Health',
+          permissions: ['healths'],
         },
       ]}
       navProps={{ variant: 'pills' }}

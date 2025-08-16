@@ -1,22 +1,22 @@
 import useRequest from '@/hooks/request'
-import { useAppQuery } from '@/libs/react-query'
 import sweetAlert from '@/libs/sweet-alert2'
 import { UserListingProps } from '@/types/listings/user'
 import { User } from '@/types/models/user'
 import { useEffect } from 'react'
 import LoadingContent from '../Loading/Content'
-import SearchBuilder from '../SearchBuilder'
+import FilterEngine from '../FilterEngine'
 import { generateColumnDefObject, generateStatusColumnDef } from '@/utils/table'
 import { formatForDateTimeLocalInput } from '@/libs/luxon'
-import { Column, Paginate } from '@/types/components/table'
+import { Columns } from '@/types/components/table'
 import Table from '../Table'
 import { useTranslation } from 'react-i18next'
 import useTable from '@/hooks/table'
-import { ActionContextMenuButton, ActionGroupButton } from '@/components/App/Button'
+import { ActionContextMenuButton } from '@/components/App/Button'
 import LoadingModal from '@/components/App/Loading/Modal'
 import { Role } from '@/types/models/role'
+import { getUserListing } from '@/utils/query'
 
-const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProps) => {
+const UserListing = ({ setID, setViewing, setVisible }: UserListingProps) => {
   const { t } = useTranslation()
   const {
     paginationState: [pagination, setPagination],
@@ -24,16 +24,12 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
     queryState: [query, setQuery],
     params,
   } = useTable()
-  const { data, refetch, isFetching } = useAppQuery<Paginate<User>>({
-    url: `/setting/user?${params.toString()}`,
-    method: 'GET',
-    queryKey: ['user', 'list'],
-  })
+  const { data, refetch, isFetching } = getUserListing(params)
   const { deleteAsync, isLoading } = useRequest('/setting/user')
-  const fields: Column<User>[] = [
+  const fields: Columns<User> = [
     {
-      label: t('name'),
       name: 'name',
+      label: t('name'),
       ...generateColumnDefObject<User>(t('name'), 'name'),
       includeInQuery: true,
       includeInTable: true,
@@ -46,9 +42,12 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
       includeInTable: true,
     },
     {
-      name: 'role_names',
+      name: 'roles',
       label: t('roles'),
-      ...generateColumnDefObject<User>(t('roles'), 'role_names'),
+      ...generateColumnDefObject<User>(t('roles'), 'roles'),
+      cell: ({ getValue }) => {
+        return (getValue() as Role[]).map(({ name }) => name).join(', ')
+      },
       includeInQuery: true,
       includeInTable: true,
     },
@@ -61,17 +60,16 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
       includeInQuery: true,
       includeInTable: true,
     },
-    generateStatusColumnDef(),
   ]
 
   useEffect(() => {
     refetch()
-  }, [counter, query, sorting, pagination])
+  }, [query, sorting, pagination])
 
   return (
     <>
       <div className="py-3">
-        <SearchBuilder
+        <FilterEngine
           query={query}
           setQuery={setQuery}
           fields={fields.filter((field) => field.includeInQuery)}
@@ -101,6 +99,7 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
                       setID(id)
                       setVisible(true)
                     },
+                    permissions: ['users.view'],
                   }}
                   editDropdownItemProps={{
                     onClick: () => {
@@ -108,6 +107,7 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
                       setID(id)
                       setVisible(true)
                     },
+                    permissions: ['users.update'],
                   }}
                   deleteDropdownItemProps={{
                     className: !!deleted_at ? 'd-none' : '',
@@ -127,6 +127,7 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
                         }
                       })
                     },
+                    permissions: ['users.delete'],
                   }}
                   restoreDropdownItemProps={{
                     className: !!deleted_at ? '' : 'd-none',
@@ -146,6 +147,7 @@ const UserListing = ({ counter, setID, setViewing, setVisible }: UserListingProp
                         }
                       })
                     },
+                    permissions: ['users.delete'],
                   }}
                 />
               </>

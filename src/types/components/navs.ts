@@ -6,7 +6,7 @@ export interface NavsProps {
   list: Nav[]
   navProps: CNavProps
   tabContentProps: CTabContentProps
-  mainPath: string
+  base: string
 }
 
 export interface Nav {

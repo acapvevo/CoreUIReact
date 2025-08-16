@@ -1,4 +1,5 @@
 import {
+  QueryClient,
   useMutation,
   UseMutationOptions,
   UseMutationResult,
@@ -12,6 +13,8 @@ import {
 import axios, { getError } from './axios'
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import sweetAlert, { AlertProps } from './sweet-alert2'
+
+export const queryClient = new QueryClient()
 
 interface QueryProps<T, Q> extends UseQueryOptions<T>, AxiosRequestConfig<Q> {
   payload?: Q

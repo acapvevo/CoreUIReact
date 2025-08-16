@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useContext, useEffect, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   CAvatar,
@@ -28,14 +28,14 @@ import { AppBreadcrumb } from '@/components/App/index'
 import { sidebarAction } from '@/store/slices/sidebar'
 import { State } from '@/types/store'
 import useTheme from '@/hooks/theme'
-import { User } from '@/types/models/user'
 import { useTranslation } from 'react-i18next'
 import { AllowedAccess } from 'react-permission-role'
 import useAppAuth from '@/hooks/auth'
+import { IPInfoContext } from 'ip-info-react'
 
 const HeaderDropdown = () => {
   const { t } = useTranslation()
-  const {logout, session} = useAppAuth()
+  const { logout, session } = useAppAuth()
 
   return (
     <>
@@ -49,7 +49,7 @@ const HeaderDropdown = () => {
             <CIcon icon={cilUser} className="me-2" />
             {t('profile')}
           </CDropdownItem>
-          <AllowedAccess permissions={['users', 'roles']}>
+          <AllowedAccess permissions={['users', 'roles', 'healths']}>
             <CDropdownItem href="/Setting">
               <CIcon icon={cilBriefcase} className="me-2" />
               {t('system')}
@@ -67,7 +67,7 @@ const HeaderDropdown = () => {
 }
 
 const Header = () => {
-  const {session} = useAppAuth()
+  const { session } = useAppAuth()
   const headerRef = useRef<HTMLDivElement>(null)
   const { colorMode, setColorMode } = useTheme()
   const { i18n, t } = useTranslation()

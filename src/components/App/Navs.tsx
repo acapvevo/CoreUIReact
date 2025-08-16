@@ -13,8 +13,9 @@ import { NavsProps } from '@/types/components/navs'
 import { Outlet, useNavigate } from 'react-router'
 import { AllowedAccess, usePermission } from 'react-permission-role'
 import useAsyncEffect from 'use-async-effect'
+import LoadingContent from './Loading/Content'
 
-const Navs = ({ list, navProps, tabContentProps, mainPath }: NavsProps) => {
+const Navs = ({ list, navProps, tabContentProps, base }: NavsProps) => {
   const [activeKey, setActiveKey] = useState(0)
   const navigate = useNavigate()
   const { isAuthorized } = usePermission()
@@ -23,7 +24,7 @@ const Navs = ({ list, navProps, tabContentProps, mainPath }: NavsProps) => {
     if (activeKey == 0) {
       for (const { permissions, path } of list) {
         if (await isAuthorized([], permissions)) {
-          navigate(`${mainPath}${path}`)
+          navigate(`/${base}/${path}`)
           break
         }
       }
@@ -40,7 +41,7 @@ const Navs = ({ list, navProps, tabContentProps, mainPath }: NavsProps) => {
                 <CNavItem>
                   <CNavLink
                     active={activeKey === index + 1}
-                    onClick={() => navigate(`${mainPath}${path}`)}
+                    onClick={() => navigate(`/${base}/${path}`)}
                   >
                     {title}
                   </CNavLink>
@@ -53,7 +54,7 @@ const Navs = ({ list, navProps, tabContentProps, mainPath }: NavsProps) => {
       <CCardBody>
         <CTabContent {...tabContentProps}>
           <CTabPane role="tabpanel" aria-labelledby="test-tab" visible={activeKey === 0}>
-            Test
+            <LoadingContent/>
           </CTabPane>
           <CTabPane role="tabpanel" aria-labelledby="other-tab" visible={activeKey !== 0}>
             <Outlet context={[activeKey, setActiveKey]} />

@@ -15,6 +15,7 @@ import {
   CRow,
   CFormLabel,
   CCol,
+  CFormCheck,
 } from '@coreui/react'
 import {
   useReactTable,
@@ -23,11 +24,11 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   flexRender,
-  PaginationState,
   Row,
+  ColumnOrderState,
 } from '@tanstack/react-table'
 import { range } from 'lodash'
-import { CSSProperties, ReactNode, useState } from 'react'
+import { CSSProperties, memo, useMemo, useState } from 'react'
 
 // needed for table body level scope DnD setup
 import {
@@ -36,7 +37,7 @@ import {
   MouseSensor,
   TouchSensor,
   closestCenter,
-  type DragEndEvent,
+  DragEndEvent,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
@@ -50,14 +51,16 @@ import ContextMenu from './ContextMenu'
 import {
   DragAlongCellType,
   DraggableHeaderType,
+  TableContentProps,
   TableContentType,
   TableHeaderContextMenuType,
   TableProps,
   TableRowsContextMenuType,
 } from '@/types/components/table'
 import Icon from './Icon'
+import { Model } from '@/types/model'
 
-const Table: <T>(props: TableProps<T>) => ReactNode = ({
+const Table = <T extends Model>({
   data: defaultData,
   columnDef: defaultColumns,
   enableRowSelection,
@@ -66,12 +69,22 @@ const Table: <T>(props: TableProps<T>) => ReactNode = ({
   pagination,
   setPagination,
   ...props
-}) => {
-  const [data] = useState(() => [...(defaultData?.data ?? [])])
-  const [columns] = useState<typeof defaultColumns>(() => [...defaultColumns])
+}: TableProps<T>) => {
+  const [showDeleted, setShowDeleted] = useState(false)
+  const data = useMemo(
+    () => [
+      ...((showDeleted
+        ? defaultData?.data
+        : defaultData?.data.filter(({ deleted_at }) => !deleted_at)) ?? []),
+    ],
+    [showDeleted],
+  )
+  const columns = useMemo(() => defaultColumns, [])
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState({})
-  const [columnOrder, setColumnOrder] = useState<string[]>(() => columns.map((c) => c.id!))
+  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>(() =>
+    columns.map((c) => c.id ?? ''),
+  )
   const usePagination = !!pagination && !!setPagination
   const useSorting = !!sorting && !!setSorting
 
@@ -89,8 +102,8 @@ const Table: <T>(props: TableProps<T>) => ReactNode = ({
     onSortingChange: setSorting,
     enableRowSelection,
     enableMultiRowSelection: false,
-    rowCount: defaultData?.total,
-    manualPagination: !usePagination,
+    rowCount: defaultData?.meta.total,
+    manualPagination: usePagination,
     manualSorting: useSorting,
     isMultiSortEvent: () => true,
     defaultColumn: {
@@ -127,33 +140,41 @@ const Table: <T>(props: TableProps<T>) => ReactNode = ({
 
   return (
     <>
-      {usePagination && (
-        <CRow>
-          <CCol lg={2}>
-            <CRow>
-              <CFormLabel htmlFor="page_number" className="col-sm-4 col-form-label">
-                Show
-              </CFormLabel>
-              <CCol sm={8}>
-                <CFormSelect
-                  id="page_number"
-                  value={table.getState().pagination.pageSize.toString()}
-                  onChange={(e) => {
-                    table.setPageSize(Number(e.target.value))
-                  }}
-                  options={[10, 20, 30, 40, 50].map((value) => {
-                    return {
-                      label: `${value} rows`,
-                      value: value.toString(),
-                    }
-                  })}
-                />
-              </CCol>
-            </CRow>
-          </CCol>
-          <CCol lg={10}></CCol>
-        </CRow>
-      )}
+      <CRow>
+        {usePagination ? (
+          <>
+            <CFormLabel htmlFor="page_number" className="col-sm-1 col-form-label">
+              Show
+            </CFormLabel>
+            <CCol sm={2}>
+              <CFormSelect
+                id="page_number"
+                value={table.getState().pagination.pageSize.toString()}
+                onChange={(e) => {
+                  table.setPageSize(Number(e.target.value))
+                }}
+                options={[10, 20, 30, 40, 50].map((value) => {
+                  return {
+                    label: `${value} rows`,
+                    value: value.toString(),
+                  }
+                })}
+              />
+            </CCol>
+          </>
+        ) : (
+          <CCol sm={3} />
+        )}
+        <CCol sm={9} className="d-grid gap-2 d-md-flex justify-content-md-end">
+          <CFormCheck
+            button={{ color: 'primary', variant: 'outline' }}
+            id="btn-check"
+            label="Show Deleted Data"
+            checked={showDeleted}
+            onChange={(e) => setShowDeleted(e.target.checked)}
+          />
+        </CCol>
+      </CRow>
       <DndContext
         collisionDetection={closestCenter}
         modifiers={[restrictToHorizontalAxis]}
@@ -297,7 +318,7 @@ const DraggableHeader: DraggableHeaderType = ({ header, useSorting }) => {
 }
 
 const DragAlongCell: DragAlongCellType = ({ cell: { column, getContext } }) => {
-  const { isDragging, setNodeRef, transform } = useSortable({
+  const { isDragging, setNodeRef } = useSortable({
     id: column.id,
   })
   const meta = column.columnDef.meta
@@ -322,7 +343,7 @@ const DragAlongCell: DragAlongCellType = ({ cell: { column, getContext } }) => {
   )
 }
 
-const TableContent: TableContentType = ({
+const TableContent = <T extends Model>({
   table,
   style,
   columnOrder,
@@ -330,14 +351,14 @@ const TableContent: TableContentType = ({
   useSorting,
   RowsContextMenu,
   RowProps,
-}) => {
+}: TableContentProps<T>) => {
   const [headerContextMenuVisible, setHeaderContextMenuVisible] = useState(false)
   const [rowsContextMenuVisible, setRowsContextMenuVisible] = useState(false)
   const [position, setPosition] = useState({
     top: '0px',
     left: '0px',
   })
-  const [row, setRow] = useState<Row<any>>()
+  const [row, setRow] = useState<Row<T>>()
 
   return (
     <>
@@ -367,11 +388,14 @@ const TableContent: TableContentType = ({
           </CTableHead>
           <CTableBody>
             {table.getRowModel().rows.map((row) => {
-              const { onClick, onContextMenu, active, ...props } = RowProps ? RowProps(row) : {}
+              const { onClick, onContextMenu, active, className, ...props } = RowProps
+                ? RowProps(row)
+                : {}
               return (
                 <CTableRow
                   key={row.id}
                   {...props}
+                  className={`${row.original.deleted_at && 'table-danger'} ${className}`}
                   onClick={(e) => {
                     row.getToggleSelectedHandler()(e)
                     onClick && onClick(e)
@@ -444,4 +468,4 @@ const TableContent: TableContentType = ({
   )
 }
 
-export default Table
+export default memo(Table) as typeof Table

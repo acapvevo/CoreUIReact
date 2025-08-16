@@ -24,7 +24,7 @@ export const formatFromJSDate = (date: Date, format: string) => {
 }
 
 export const formatForDateTimeLocalInput = (date: Date) => {
-  return DateTime.fromJSDate(date).set({millisecond: 0, second: 0}).toISO({
+  return DateTime.fromJSDate(date).set({ millisecond: 0, second: 0 }).toISO({
     includeOffset: false,
     suppressSeconds: true,
     suppressMilliseconds: true,
@@ -44,4 +44,8 @@ export const formatForDateTimeLocalInputFromString = (date?: string) => {
 
 export const getLocalTimezone = (format: string) => {
   return DateTime.local().toFormat(format)
+}
+
+export const formatFromUnix = (unix: number, format: string) => {
+  return DateTime.fromSeconds(unix).toFormat(format)
 }

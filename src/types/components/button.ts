@@ -1,5 +1,6 @@
-import { CButtonProps } from "@coreui/react/dist/esm/components/button/CButton"
+import { CButtonProps } from '@coreui/react/dist/esm/components/button/CButton'
 import { CDropdownItemProps } from '@coreui/react/dist/esm/components/dropdown/CDropdownItem'
+import { HasAccessProps } from 'react-permission-role/dist/components/AllowedAccess'
 
 export interface ActionButtonsProps {
   viewButtonProps?: CButtonProps
@@ -8,14 +9,14 @@ export interface ActionButtonsProps {
   restoreButtonProps?: CButtonProps
 }
 
+export type DropdownItemProps = CDropdownItemProps & Pick<HasAccessProps, 'roles' | 'permissions'>
+
 export interface ActionDropdownItemProps {
-  viewDropdownItemProps?: CDropdownItemProps
-  editDropdownItemProps?: CDropdownItemProps
-  deleteDropdownItemProps?: CDropdownItemProps
-  restoreDropdownItemProps?: CDropdownItemProps
+  viewDropdownItemProps?: DropdownItemProps
+  editDropdownItemProps?: DropdownItemProps
+  deleteDropdownItemProps?: DropdownItemProps
+  restoreDropdownItemProps?: DropdownItemProps
   isDeleted?: boolean
 }
 
-export interface ActionProps extends ActionButtonsProps {
-
-}
+export interface ActionProps extends ActionButtonsProps {}

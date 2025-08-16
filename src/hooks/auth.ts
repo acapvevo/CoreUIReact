@@ -1,4 +1,4 @@
-import axios, { getError } from '@/libs/axios'
+import { getError } from '@/libs/axios'
 import { useNavigate } from 'react-router'
 import sweetAlert from '@/libs/sweet-alert2'
 import { LoginWithEmailInput, LoginWithUsernameInput, UserSession } from '@/types/models/user'
@@ -18,13 +18,14 @@ const useAppAuth = (redirectIfAuthenticated?: string) => {
 
   const login = async (data: LoginWithUsernameInput | LoginWithEmailInput) => {
     try {
-      await signInAsync(data)
+      const response = await signInAsync(data)
 
       setUser({
-        id: session?.user.id,
-        permissions: session?.permissions,
-        roles: session?.roles,
+        id: response.user?.user.id,
+        permissions: response.user?.permissions,
+        roles: response.user?.roles,
       })
+
       navigate(redirectIfAuthenticated ?? '/', { replace: true })
     } catch (error: any) {
       sweetAlert(getError(error))
