@@ -8,19 +8,20 @@ import {
   User,
   UserInput,
   UserSchema,
+  UserSession,
 } from '@/types/models/user'
 import { CButton, CCard, CCardBody, CCol, CFormInput, CImage, CRow } from '@coreui/react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { SubmitHandler, useForm } from 'react-hook-form'
+import { useEffect, useRef, useState } from 'react'
+import { Controller, SubmitHandler, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Modal from '@/components/App/Modal'
 import ProfileForm from '@/components/App/Form/Profile'
 import LoadingButton from '@/components/App/Loading/Button'
-import { UploadFileInput } from '@/types/forms/uploadFile'
-import UploadFile from '@/components/App/Form/UploadFile'
-import { Alert } from '@/libs/sweet-alert2'
 import Password from '@/components/App/Form/Password'
 import { useTranslation } from 'react-i18next'
+import { useSessionStorage } from '@uidotdev/usehooks'
+import { UpdateProfileFormControl } from '@/utils/form'
+import useAppAuth from '@/hooks/auth'
 
 const UpdatePasswordModal = (props: ModalProps) => {
   const { t } = useTranslation()
@@ -33,7 +34,7 @@ const UpdatePasswordModal = (props: ModalProps) => {
     resolver: zodResolver(PasswordScheme),
   })
   const { handleSubmit } = form
-  const { isPending, mutateAsync } = useAppMutation<PasswordInput, Alert>({
+  const { isPending, mutateAsync } = useAppMutation<PasswordInput>({
     url: '/profile/password',
     method: 'POST',
     success: () => {
@@ -68,19 +69,17 @@ const UpdateProfilePicturedModal = (props: ModalProps) => {
   const { t } = useTranslation()
   const { onClose, visible } = props
   const imgRef = useRef<HTMLImageElement>(null)
-  const [imgPreview, setImgPreview] = useState('')
-  const form = useForm<UploadFileInput>({
-    defaultValues: {
-      files: [],
-    },
-  })
-  const { handleSubmit, setValue } = form
-  const { isPending, mutateAsync } = useAppMutation<FormData, { user: User }>({
+  const [imgPreview, setImgPreview] = useState<string | undefined>()
+  const { handleSubmit, control } = useForm<{ files: FileList }>()
+  const { session } = useAppAuth()
+  const [, setUser] = useSessionStorage(`${import.meta.env.VITE_APP_NAME}_user`, session)
+  const { isPending, mutate } = useAppMutation<FormData, UserSession>({
     url: '/profile/picture',
     method: 'POST',
     success: (data) => {
-      localStorage.setItem(`${import.meta.env.VITE_APP_NAME}_auth_state`, JSON.stringify(data.user))
+      setUser(data)
       onClose && onClose()
+      window.location.reload()
     },
   })
   const { data, isFetching } = useAppQuery<User>({
@@ -94,45 +93,6 @@ const UpdateProfilePicturedModal = (props: ModalProps) => {
     if (imgRef.current && data) imgRef.current.src = imgPreview ? imgPreview : data.profile_picture
   }, [imgPreview, data])
 
-  const save: SubmitHandler<UploadFileInput> = async (profile) => {
-    const payload = new FormData()
-    payload.append('profile_picture', profile.files[0])
-
-    await mutateAsync(payload)
-  }
-
-  const Content = () => {
-    if (!data || isFetching) return <LoadingContent />
-
-    return (
-      <>
-        <div className="d-flex justify-content-center">
-          <CImage
-            ref={imgRef}
-            className="py-3"
-            width={200}
-            height={200}
-            rounded
-            onLoad={() => {
-              URL.revokeObjectURL(imgPreview)
-            }}
-          />
-        </div>
-        <UploadFile
-          form={form}
-          needList={false}
-          options={{
-            multiple: false,
-            onDrop: (acceptedFiles) => {
-              setValue('files', acceptedFiles)
-              setImgPreview(URL.createObjectURL(acceptedFiles[0]))
-            },
-          }}
-        />
-      </>
-    )
-  }
-
   return (
     <Modal
       {...props}
@@ -140,14 +100,60 @@ const UpdateProfilePicturedModal = (props: ModalProps) => {
       footer={
         <LoadingButton
           color="primary"
-          onClick={handleSubmit(save)}
+          onClick={handleSubmit(
+            (data) => {
+              const payload = new FormData()
+              payload.append('profile_picture', data.files[0])
+
+              mutate(payload)
+            },
+            (errors) => console.log(errors),
+          )}
           processing={isPending}
           text={t('save')}
           loadingText={`${t('saving')}...`}
         />
       }
     >
-      <Content />
+      {!data || isFetching ? (
+        <LoadingContent />
+      ) : (
+        <>
+          <div className="d-flex justify-content-center">
+            <CImage
+              ref={imgRef}
+              className="py-3"
+              width={200}
+              height={200}
+              rounded
+              onLoad={() => {
+                imgPreview && URL.revokeObjectURL(imgPreview)
+              }}
+            />
+          </div>
+          <Controller
+            control={control}
+            name="files"
+            render={({ field: { onChange, value, ...field }, fieldState: { error } }) => {
+              return (
+                <CFormInput
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      onChange(e.target.files)
+                      setImgPreview(URL.createObjectURL(e.target.files[0]))
+                    }
+                  }}
+                  {...field}
+                  invalid={!!error}
+                  feedbackInvalid={error?.message}
+                />
+              )
+            }}
+          />
+        </>
+      )}
     </Modal>
   )
 }
@@ -155,22 +161,20 @@ const UpdateProfilePicturedModal = (props: ModalProps) => {
 const UpdateProfileModal = (props: ModalProps) => {
   const { t } = useTranslation()
   const { onClose, visible } = props
-  const form = useForm<UserInput>({
-    resolver: zodResolver(UserSchema),
+  const { handleSubmit } = useForm({
+    formControl: UpdateProfileFormControl.formControl,
   })
-  const { handleSubmit } = form
-  const { mutateAsync, isPending } = useAppMutation<UserInput, { user: User }>({
+  const { session } = useAppAuth()
+  const [, setUser] = useSessionStorage(`${import.meta.env.VITE_APP_NAME}_user`, session)
+  const { mutate, isPending } = useAppMutation<UserInput, UserSession>({
     url: '/profile',
     method: 'PATCH',
     success: (data) => {
-      localStorage.setItem(`${import.meta.env.VITE_APP_NAME}_auth_state`, JSON.stringify(data.user))
+      setUser(data)
       onClose && onClose()
+      window.location.reload()
     },
   })
-
-  const save: SubmitHandler<UserInput> = async (user) => {
-    await mutateAsync(user)
-  }
 
   return (
     <Modal
@@ -182,11 +186,13 @@ const UpdateProfileModal = (props: ModalProps) => {
           loadingText={`${t('saving')}...`}
           color="primary"
           processing={isPending}
-          onClick={handleSubmit(save)}
+          onClick={handleSubmit((user) => {
+            mutate(user)
+          })}
         />
       }
     >
-      <ProfileForm enabled={visible} form={form}></ProfileForm>
+      <ProfileForm enabled={visible} />
     </Modal>
   )
 }
@@ -214,43 +220,6 @@ const Profile = () => {
   const [updateProfilePictureModalVisible, setUpdateProfilePictureModal] = useState(false)
   const [updatePasswordModalVisible, setUpdatePasswordModal] = useState(false)
 
-  const ProfileData = useMemo(() => {
-    if (isFetching) return <LoadingContent />
-    return (
-      <CRow>
-        <CCol>
-          <div className="text-center">
-            <CImage rounded src={data?.profile_picture} width={200} height={200} />
-          </div>
-          <div className="text-center py-3">
-            <CButton color="primary" onClick={() => setUpdateProfilePictureModal(true)}>
-              {t('edit_picture')}
-            </CButton>
-          </div>
-        </CCol>
-        <CCol lg={9}>
-          <CRow lg={{ gutter: 3 }}>
-            <CCol sm={3}>{t('name')}:</CCol>
-            <CCol sm={9}>{data?.name}</CCol>
-            <CCol sm={3}>{t('gender')}:</CCol>
-            <CCol sm={9}>{GetGender(data?.gender)}</CCol>
-            <CCol sm={3}>{t('email_address')}:</CCol>
-            <CCol sm={9}>{data?.email}</CCol>
-            <CCol sm={3}>{t('phone_number')}:</CCol>
-            <CCol sm={9}>{data?.phone_number.number}</CCol>
-            <CCol sm={3}>{t('address', { num: '' })}:</CCol>
-            <CCol sm={9}>
-              {data?.address.line_1}, <br /> {data?.address.line_2}, <br />
-              {data?.address.line_3}, <br />
-              {data?.address.postcode} {data?.address.city}, <br />
-              {data?.address.state}, {data?.address.country} <br />
-            </CCol>
-          </CRow>
-        </CCol>
-      </CRow>
-    )
-  }, [data, isFetching])
-
   return (
     <>
       <CCard>
@@ -263,7 +232,41 @@ const Profile = () => {
               {t('update_profile')}
             </CButton>
           </div>
-          {ProfileData}
+          {isFetching ? (
+            <LoadingContent />
+          ) : (
+            <CRow>
+              <CCol>
+                <div className="text-center">
+                  <CImage rounded src={data?.profile_picture} width={200} height={200} />
+                </div>
+                <div className="text-center py-3">
+                  <CButton color="primary" onClick={() => setUpdateProfilePictureModal(true)}>
+                    {t('edit_picture')}
+                  </CButton>
+                </div>
+              </CCol>
+              <CCol lg={9}>
+                <CRow lg={{ gutter: 3 }}>
+                  <CCol sm={3}>{t('name')}:</CCol>
+                  <CCol sm={9}>{data?.name}</CCol>
+                  <CCol sm={3}>{t('gender')}:</CCol>
+                  <CCol sm={9}>{GetGender(data?.gender)}</CCol>
+                  <CCol sm={3}>{t('email_address')}:</CCol>
+                  <CCol sm={9}>{data?.email}</CCol>
+                  <CCol sm={3}>{t('phone_number')}:</CCol>
+                  <CCol sm={9}>{data?.phone_number.number}</CCol>
+                  <CCol sm={3}>{t('address', { num: '' })}:</CCol>
+                  <CCol sm={9}>
+                    {data?.address.line_1}, <br /> {data?.address.line_2}, <br />
+                    {data?.address.line_3}, <br />
+                    {data?.address.postcode} {data?.address.city}, <br />
+                    {data?.address.state}, {data?.address.country} <br />
+                  </CCol>
+                </CRow>
+              </CCol>
+            </CRow>
+          )}
         </CCardBody>
       </CCard>
 
@@ -279,7 +282,7 @@ const Profile = () => {
         visible={updateProfilePictureModalVisible}
         onClose={() => {
           setUpdateProfilePictureModal(false)
-          window.location.reload()
+          refetch()
         }}
       />
 

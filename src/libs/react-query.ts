@@ -73,7 +73,6 @@ export const useAppSuspenseQuery: AppSuspenseQuery = (config) => {
 
 type AppQueries = <T, Q = { [k: string]: any }>(configs: QueryProps<T, Q>[]) => UseQueryResult<T>[]
 export const useAppQueries: AppQueries = (configs) => {
-
   const queries = useQueries({
     queries: configs.map((config) => {
       const { url, method, payload, ...query } = config
@@ -110,12 +109,11 @@ type UseMutationProps<T, R> = {
 type UseMutation = <T, R>(
   props: UseMutationProps<T, R>,
 ) => UseMutationResult<AxiosResponse<R & Pick<AlertProps, 'type' | 'text'>, T>, Error, T>
-export const useAppMutation = function <T, R>(props: UseMutationProps<T, R>) {
-
+export const useAppMutation = function <T, R = {}>(props: UseMutationProps<T, R>) {
   return useGuestMutation(props)
 }
 
-export const useGuestMutation = function <T, R>({
+export const useGuestMutation = function <T, R = {}>({
   success,
   onSuccess,
   onError,

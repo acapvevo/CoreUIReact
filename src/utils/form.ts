@@ -1,3 +1,4 @@
+import { UploadFileInput, UploadFileScheme } from '@/types/forms/uploadFile'
 import { RoleInput, RoleScheme } from '@/types/models/role'
 import { Gender, UserInput, UserSchema } from '@/types/models/user'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -34,5 +35,16 @@ export const UserDefaultValues: UserInput = {
 }
 export const UserFormControl = createFormControl<UserInput>({
   defaultValues: UserDefaultValues,
+  resolver: zodResolver(UserSchema),
+})
+
+export const UploadFileFormControl = createFormControl<UploadFileInput>({
+  defaultValues: {
+    files: [],
+  },
+  resolver: zodResolver(UploadFileScheme),
+})
+
+export const UpdateProfileFormControl = createFormControl<UserInput>({
   resolver: zodResolver(UserSchema),
 })

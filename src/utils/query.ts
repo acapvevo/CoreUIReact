@@ -58,9 +58,9 @@ export const getRoleListing = (params: URLSearchParams) => {
   })
 }
 
-export const invalidateGetRoleListing = () =>
+export const invalidateRole = () =>
   queryClient.invalidateQueries({
-    queryKey: ['setting', 'role', 'list'],
+    queryKey: ['setting', 'role'],
   })
 
 export const getRoles = (enabled?: boolean) => {

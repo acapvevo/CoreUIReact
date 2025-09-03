@@ -4,8 +4,7 @@ import { UserListingProps } from '@/types/listings/user'
 import { User } from '@/types/models/user'
 import { useEffect } from 'react'
 import LoadingContent from '../Loading/Content'
-import FilterEngine from '../FilterEngine'
-import { generateColumnDefObject, generateStatusColumnDef } from '@/utils/table'
+import { generateColumnDefObject } from '@/utils/table'
 import { formatForDateTimeLocalInput } from '@/libs/luxon'
 import { Columns } from '@/types/components/table'
 import Table from '../Table'
@@ -14,36 +13,42 @@ import useTable from '@/hooks/table'
 import { ActionContextMenuButton } from '@/components/App/Button'
 import LoadingModal from '@/components/App/Loading/Modal'
 import { Role } from '@/types/models/role'
-import { getUserListing } from '@/utils/query'
+import { getUserListing, getUsers } from '@/utils/query'
+import { QueryBuilderComponent } from '@syncfusion/ej2-react-querybuilder'
+import QueryBuilder from '../QueryBuilder'
 
 const UserListing = ({ setID, setViewing, setVisible }: UserListingProps) => {
   const { t } = useTranslation()
   const {
     paginationState: [pagination, setPagination],
     sortingState: [sorting, setSorting],
-    queryState: [query, setQuery],
+    queryState: [_, setQuery],
     params,
   } = useTable()
   const { data, refetch, isFetching } = getUserListing(params)
+  const { data: users } = getUsers()
   const { deleteAsync, isLoading } = useRequest('/setting/user')
   const fields: Columns<User> = [
     {
-      name: 'name',
+      field: 'name',
       label: t('name'),
+      type: 'string',
       ...generateColumnDefObject<User>(t('name'), 'name'),
       includeInQuery: true,
       includeInTable: true,
     },
     {
-      name: 'email',
+      field: 'email',
       label: t('email_address'),
+      type: 'string',
       ...generateColumnDefObject<User>(t('email_address'), 'email'),
       includeInQuery: true,
       includeInTable: true,
     },
     {
-      name: 'roles',
+      field: 'roles.name',
       label: t('roles'),
+      type: 'array',
       ...generateColumnDefObject<User>(t('roles'), 'roles'),
       cell: ({ getValue }) => {
         return (getValue() as Role[]).map(({ name }) => name).join(', ')
@@ -52,10 +57,9 @@ const UserListing = ({ setID, setViewing, setVisible }: UserListingProps) => {
       includeInTable: true,
     },
     {
-      name: 'created_at',
+      field: 'created_at',
       label: t('created_at'),
-      inputType: 'datetime-local',
-      defaultValue: formatForDateTimeLocalInput(new Date()),
+      type: 'date',
       ...generateColumnDefObject<User>(t('created_at'), 'created_at'),
       includeInQuery: true,
       includeInTable: true,
@@ -64,16 +68,12 @@ const UserListing = ({ setID, setViewing, setVisible }: UserListingProps) => {
 
   useEffect(() => {
     refetch()
-  }, [query, sorting, pagination])
+  }, [params.toString()])
 
   return (
     <>
       <div className="py-3">
-        <FilterEngine
-          query={query}
-          setQuery={setQuery}
-          fields={fields.filter((field) => field.includeInQuery)}
-        />
+        <QueryBuilder dataSource={users} fields={fields} setQuery={setQuery} />
       </div>
       {isFetching ? (
         <LoadingContent />

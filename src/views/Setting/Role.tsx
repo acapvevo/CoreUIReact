@@ -9,7 +9,7 @@ import LoadingButton from '@/components/App/Loading/Button'
 import RoleForm from '@/components/App/Form/Role'
 import useNav from '@/hooks/nav'
 import { RoleDefaultValues, RoleFormControl } from '@/utils/form'
-import { invalidateGetRoleListing } from '@/utils/query'
+import { invalidateRole } from '@/utils/query'
 
 const Role = () => {
   useNav(1)
@@ -17,7 +17,7 @@ const Role = () => {
   const [id, setID] = useState<number>()
   const [viewing, setViewing] = useState(false)
   const onClose = () => {
-    invalidateGetRoleListing()
+    invalidateRole()
     setVisible(false)
     setID(undefined)
     reset(RoleDefaultValues)

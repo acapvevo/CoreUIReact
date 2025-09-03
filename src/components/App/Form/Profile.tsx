@@ -12,27 +12,25 @@ import {
   CDropdownToggle,
 } from '@coreui/react'
 import { useEffect } from 'react'
-import { UseFormReturn } from 'react-hook-form'
+import { useForm, UseFormReturn } from 'react-hook-form'
 import { usePhoneInput, defaultCountries, parseCountry, FlagImage } from 'react-international-phone'
 import LoadingContent from '../Loading/Content'
 import 'react-international-phone/style.css'
 import { useTranslation } from 'react-i18next'
+import { UpdateProfileFormControl } from '@/utils/form'
 
-const Profile = ({
-  enabled = false,
-  form: {
+const Profile = ({ enabled = false }: { enabled?: boolean }) => {
+  const { t } = useTranslation()
+  const {
     register,
     setValue,
     reset,
     formState: { errors },
     watch,
     getValues,
-  },
-}: {
-  enabled?: boolean
-  form: UseFormReturn<UserInput>
-}) => {
-  const {t} = useTranslation()
+  } = useForm({
+    formControl: UpdateProfileFormControl.formControl,
+  })
   const { data, isLoading } = useAppQuery<User>({
     url: `/profile`,
     queryKey: ['profile', 'update'],
@@ -131,7 +129,7 @@ const Profile = ({
       </CCol>
       <CCol lg={12}>
         <CFormInput
-          floatingLabel={t('address', {num: 1})}
+          floatingLabel={t('address', { num: 1 })}
           type="text"
           id="address_1"
           invalid={!!errors.address?.line_1}
@@ -141,7 +139,7 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel={t('address', {num: 2})}
+          floatingLabel={t('address', { num: 2 })}
           type="text"
           id="address_2"
           invalid={!!errors.address?.line_2}
@@ -151,7 +149,7 @@ const Profile = ({
       </CCol>
       <CCol lg={6}>
         <CFormInput
-          floatingLabel={t('address', {num: 3})}
+          floatingLabel={t('address', { num: 3 })}
           type="text"
           id="address_3"
           invalid={!!errors.address?.line_3}

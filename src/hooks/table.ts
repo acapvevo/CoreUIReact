@@ -1,10 +1,11 @@
+import { RuleModel } from '@syncfusion/ej2-react-querybuilder'
 import { PaginationState, SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
 import { formatQuery, RuleGroupType } from 'react-querybuilder'
 
 const useTable = () => {
   const sortingState = useState<SortingState>([])
-  const queryState = useState<RuleGroupType>({ combinator: 'and', rules: [] })
+  const queryState = useState<RuleModel>({})
   const paginationState = useState<PaginationState>({
     pageSize: 10,
     pageIndex: 0,
@@ -12,7 +13,7 @@ const useTable = () => {
 
   const filters = useMemo(() => {
     return {
-      query: formatQuery(queryState[0], 'json_without_ids'),
+      query: JSON.stringify(queryState[0]),
       sort: JSON.stringify(sortingState[0]),
       paginate: JSON.stringify({
         size: paginationState[0].pageSize,

@@ -13,9 +13,10 @@ import { Field } from 'react-querybuilder'
 import { ContextMenuProps } from './context_menu'
 import { CTableRowProps } from '@coreui/react/dist/esm/components/table/CTableRow'
 import { Model } from '@/types/model'
+import { ColumnsModel } from '@syncfusion/ej2-react-querybuilder'
 
 export type Column<T extends Model> = ColumnDef<T> &
-  Field & { includeInTable?: boolean; includeInQuery?: boolean }
+  ColumnsModel & { includeInTable?: boolean; includeInQuery?: boolean }
 export type Columns<T extends Model> = Column<T>[]
 
 export interface TableProps<T extends Model> extends CTableProps {
